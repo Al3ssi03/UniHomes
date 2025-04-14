@@ -6,6 +6,8 @@ import CreateListingForm from "./components/CreateListingForm";
 import LoginRegisterPage from "./pages/LoginRegisterPage";
 import UserListingsPage from "./pages/UserListingsPage";
 import EditListingPage from "./pages/EditListingPage";
+import ListingDetailPage from "./pages/ListingDetailPage";
+import InboxPage from "./pages/InboxPage";
 
 export default function App() {
   return (
@@ -17,6 +19,8 @@ export default function App() {
         <Route path="/auth" element={<LoginRegisterPage />} />
         <Route path="/i-miei-annunci" element={<UserListingsPage />} />
         <Route path="/modifica/:id" element={<EditListingPage />} />
+        <Route path="/annuncio/:id" element={<ListingDetailPage />} />
+        <Route path="/inbox" element={<InboxPage />} />
       </Routes>
     </Router>
   );

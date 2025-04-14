@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
 export default function UserListingsPage() {
@@ -68,6 +68,9 @@ export default function UserListingsPage() {
                 <button onClick={() => handleDelete(listing.id)} className="text-red-600 underline text-sm">
                   Elimina
                 </button>
+                <Link to={`/annuncio/${listing.id}`} className="text-green-600 underline text-sm">
+                  Dettagli
+                </Link>
               </div>
             </div>
           ))}

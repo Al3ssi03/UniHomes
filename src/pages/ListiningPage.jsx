@@ -1,8 +1,7 @@
 // 📁 src/pages/ListingsPage.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import { Link } from "react-router-dom";
 
 export default function ListingsPage() {
   const [listings, setListings] = useState([]);
@@ -102,6 +101,11 @@ export default function ListingsPage() {
             <div className="text-xs text-gray-500 mt-2">
               Servizi: {listing.services.join(", ")}
             </div>
+            <div className="mt-3">
+              <Link to={`/annuncio/${listing.id}`} className="text-blue-600 underline text-sm">
+                Vedi dettagli
+              </Link>
+            </div>
           </div>
         ))}
       </div>
@@ -117,27 +121,6 @@ export default function ListingsPage() {
             {index + 1}
           </button>
         ))}
-      </div>
-
-      {/* Mappa */}
-      <div className="mt-10">
-        <h2 className="text-xl font-bold mb-2">Mappa degli annunci</h2>
-        <MapContainer center={[41.9028, 12.4964]} zoom={6} scrollWheelZoom={false} className="h-96 w-full rounded">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          {filtered.map((listing) => (
-            listing.lat && listing.lng && (
-              <Marker key={listing.id} position={[listing.lat, listing.lng]}>
-                <Popup>
-                  <strong>{listing.title}</strong><br />
-                  {listing.city} - €{listing.price}
-                </Popup>
-              </Marker>
-            )
-          ))}
-        </MapContainer>
       </div>
     </div>
   );

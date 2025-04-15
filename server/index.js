@@ -40,7 +40,7 @@ app.post("/listings", authMiddleware, upload.single("image"), (req, res) => {
     description,
     services,
     available_from,
-    university
+    university,
   } = req.body;
 
   const newListing = {
@@ -56,7 +56,7 @@ app.post("/listings", authMiddleware, upload.single("image"), (req, res) => {
     university,
     imageUrl: req.file ? `/uploads/${req.file.filename}` : null,
     userId: req.user.id,
-    createdAt: new Date()
+    createdAt: new Date(),
   };
 
   listings.push(newListing);

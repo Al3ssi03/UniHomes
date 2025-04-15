@@ -48,10 +48,14 @@ export default function CreateListingForm() {
     Object.entries(formData).forEach(([key, value]) => {
       if (key === "services") {
         data.append(key, JSON.stringify(value));
-      } else {
+      } else if (key !== "image") {
         data.append(key, value);
       }
     });
+
+    if (formData.image) {
+      data.append("image", formData.image);
+    }
 
     try {
       await axios.post("http://localhost:3001/listings", data, {

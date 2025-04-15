@@ -5,7 +5,7 @@ import CreateListingForm from "./components/CreateListingForm";
 import LoginRegisterPage from "./pages/LoginRegisterPage";
 import UserListingsPage from "./pages/UserListingsPage";
 import InboxPage from "./pages/InboxPage";
-import EditListingPage from "./pages/EditListeningPage";
+import EditListingPage from "./pages/EditListingPage";
 import ListingDetailPage from "./pages/ListingDetailPage";
 
 export default function App() {

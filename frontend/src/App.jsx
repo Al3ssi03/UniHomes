@@ -1,3 +1,4 @@
+// 📁 src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ListingsPage from "./pages/ListingsPage";
@@ -7,22 +8,24 @@ import UserListingsPage from "./pages/UserListingsPage";
 import InboxPage from "./pages/InboxPage";
 import EditListingPage from "./pages/EditListingPage";
 import ListingDetailPage from "./pages/ListingDetailPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 export default function App() {
   return (
     <Router>
       <Navbar />
-      <main className="p-4 max-w-6xl mx-auto">
-        <Routes>
-          <Route path="/" element={<ListingsPage />} />
-          <Route path="/crea" element={<CreateListingForm />} />
-          <Route path="/auth" element={<LoginRegisterPage />} />
-          <Route path="/i-miei-annunci" element={<UserListingsPage />} />
-          <Route path="/inbox" element={<InboxPage />} />
-          <Route path="/modifica/:id" element={<EditListingPage />} />
-          <Route path="/annuncio/:id" element={<ListingDetailPage />} />
-        </Routes>
-      </main>
+      <Routes>
+        <Route path="/" element={<ListingsPage />} />
+        <Route path="/crea" element={<CreateListingForm />} />
+        <Route path="/auth" element={<LoginRegisterPage />} />
+        <Route path="/i-miei-annunci" element={<UserListingsPage />} />
+        <Route path="/inbox" element={<InboxPage />} />
+        <Route path="/modifica/:id" element={<EditListingPage />} />
+        <Route path="/annuncio/:id" element={<ListingDetailPage />} />
+        <Route path="/recupera-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+      </Routes>
     </Router>
   );
 }

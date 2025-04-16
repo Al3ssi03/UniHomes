@@ -4,9 +4,13 @@ const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const { authRoutes, authMiddleware } = require("./auth");
+const { sendPasswordResetEmail } = require("./mailer");
 const app = express();
 const PORT = 3001;
+
+require("dotenv").config();
 
 app.use(cors());
 app.use(express.json());
@@ -27,55 +31,40 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const listings = [];
+const users = []; // array utenti fittizi
+const passwordResetTokens = new Map();
 
 app.use("/auth", authRoutes);
 
-app.post("/listings", authMiddleware, upload.single("image"), (req, res) => {
-  const {
-    title,
-    city,
-    address,
-    price,
-    type,
-    description,
-    services,
-    available_from,
-    university,
-  } = req.body;
+app.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  const user = users.find((u) => u.email === email);
+  if (!user) return res.status(404).json({ message: "Utente non trovato" });
 
-  const newListing = {
-    id: listings.length + 1,
-    title,
-    city,
-    address,
-    price: parseFloat(price),
-    type,
-    description,
-    services: JSON.parse(services),
-    available_from,
-    university,
-    imageUrl: req.file ? `/uploads/${req.file.filename}` : null,
-    userId: req.user.id,
-    createdAt: new Date(),
-  };
+  const token = crypto.randomBytes(32).toString("hex");
+  passwordResetTokens.set(token, user.email);
 
-  listings.push(newListing);
-  res.status(201).json({ message: "Annuncio creato!", listing: newListing });
+  try {
+    await sendPasswordResetEmail(email, token);
+    res.json({ message: "Email inviata con successo" });
+  } catch (err) {
+    console.error("Errore invio email:", err);
+    res.status(500).json({ message: "Errore nell'invio dell'email" });
+  }
 });
 
-app.get("/listings", (req, res) => {
-  res.json(listings);
-});
+app.post("/reset-password/:token", (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+  const email = passwordResetTokens.get(token);
 
-app.get("/listings/:id", (req, res) => {
-  const listing = listings.find((l) => l.id === parseInt(req.params.id));
-  if (!listing) return res.status(404).json({ message: "Annuncio non trovato" });
-  res.json(listing);
-});
+  if (!email) return res.status(400).json({ message: "Token non valido o scaduto" });
+  const user = users.find((u) => u.email === email);
+  if (!user) return res.status(404).json({ message: "Utente non trovato" });
 
-app.get("/my-listings", authMiddleware, (req, res) => {
-  const userListings = listings.filter((l) => l.userId === req.user.id);
-  res.json(userListings);
+  user.password = newPassword;
+  passwordResetTokens.delete(token);
+  res.json({ message: "Password aggiornata con successo" });
 });
 
 app.listen(PORT, () => console.log(`✅ Server avviato su http://localhost:${PORT}`));

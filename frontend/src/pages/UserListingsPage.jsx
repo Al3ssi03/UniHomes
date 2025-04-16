@@ -1,76 +1,73 @@
+// 📁 src/pages/UserListingsPage.jsx
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function UserListingsPage() {
   const [listings, setListings] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/auth");
-      return;
-    }
-
-    const fetchUserListings = async () => {
+    const fetchListings = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
       try {
         const res = await axios.get("http://localhost:3001/my-listings", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setListings(res.data);
       } catch (err) {
-        console.error("Errore nel caricamento degli annunci personali:", err);
+        console.error("Errore nel caricamento dei tuoi annunci:", err);
       }
     };
-
-    fetchUserListings();
-  }, [navigate]);
+    fetchListings();
+  }, []);
 
   const handleDelete = async (id) => {
     const token = localStorage.getItem("token");
-    if (!window.confirm("Sei sicuro di voler eliminare questo annuncio?")) return;
+    if (!token) return;
     try {
       await axios.delete(`http://localhost:3001/listings/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setListings((prev) => prev.filter((l) => l.id !== id));
     } catch (err) {
-      alert("Errore nell'eliminazione dell'annuncio");
+      alert("Errore durante l'eliminazione dell'annuncio");
     }
   };
 
-  const handleEdit = (id) => {
-    navigate(`/modifica/${id}`);
-  };
-
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">I tuoi annunci</h2>
+    <div className="p-6 max-w-5xl mx-auto">
+      <h2 className="text-2xl font-bold text-blue-700 mb-6">I tuoi annunci</h2>
       {listings.length === 0 ? (
-        <p>Non hai ancora pubblicato nessun annuncio.</p>
+        <p className="text-gray-600">Nessun annuncio pubblicato.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {listings.map((listing) => (
-            <div key={listing.id} className="border p-4 rounded shadow relative">
+            <div key={listing.id} className="bg-white shadow rounded-lg overflow-hidden">
               <img
                 src={`http://localhost:3001${listing.imageUrl}`}
-                alt="alloggio"
-                className="w-full h-48 object-cover mb-2"
+                alt={listing.title}
+                className="w-full h-40 object-cover"
               />
-              <h2 className="text-lg font-bold">{listing.title}</h2>
-              <p>{listing.city} - {listing.address}</p>
-              <p className="text-sm text-gray-600">€ {listing.price}</p>
-              <div className="flex gap-2 mt-2">
-                <button onClick={() => handleEdit(listing.id)} className="text-blue-600 underline text-sm">
-                  Modifica
-                </button>
-                <button onClick={() => handleDelete(listing.id)} className="text-red-600 underline text-sm">
-                  Elimina
-                </button>
-                <Link to={`/annuncio/${listing.id}`} className="text-green-600 underline text-sm">
-                  Dettagli
-                </Link>
+              <div className="p-4 space-y-2">
+                <h3 className="text-lg font-semibold">{listing.title}</h3>
+                <p className="text-sm text-gray-600">{listing.city}</p>
+                <p className="text-blue-600 font-bold">€ {listing.price}</p>
+                <div className="flex justify-between pt-2">
+                  <button
+                    onClick={() => navigate(`/modifica/${listing.id}`)}
+                    className="text-sm text-white bg-yellow-500 px-3 py-1 rounded hover:bg-yellow-600"
+                  >
+                    Modifica
+                  </button>
+                  <button
+                    onClick={() => handleDelete(listing.id)}
+                    className="text-sm text-white bg-red-500 px-3 py-1 rounded hover:bg-red-600"
+                  >
+                    Elimina
+                  </button>
+                </div>
               </div>
             </div>
           ))}

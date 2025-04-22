@@ -4,7 +4,7 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function LoginRegisterPage() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(() => true);
   const [form, setForm] = useState({ email: "", password: "" });
   const navigate = useNavigate();
 
@@ -31,7 +31,7 @@ export default function LoginRegisterPage() {
   return (
     <div className="p-6 max-w-md mx-auto bg-white border shadow rounded mt-10">
       <h2 className="text-xl font-bold text-blue-700 mb-4 text-center">
-        {isLogin ? "Accedi" : "Registrati"}
+        {isLogin ? "Login" : "Registrati"}
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
@@ -53,11 +53,15 @@ export default function LoginRegisterPage() {
           className="w-full border p-2 rounded"
         />
         <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-          {isLogin ? "Accedi" : "Registrati"}
+          {isLogin ? "Login" : "Registrati"}
         </button>
-        <Link to="/recupera-password" className="block text-sm text-center text-blue-600 hover:underline">
-          Hai dimenticato la password?
-        </Link>
+        {isLogin && (
+          <div className="text-center mt-2">
+            <Link to="/recupera-password" className="text-sm text-blue-600 hover:underline">
+              Hai dimenticato la password?
+            </Link>
+          </div>
+        )}
         <p className="text-sm text-center text-gray-600">
           {isLogin ? "Non hai un account?" : "Hai già un account?"} {" "}
           <button
@@ -65,7 +69,7 @@ export default function LoginRegisterPage() {
             onClick={() => setIsLogin(!isLogin)}
             className="text-blue-600 hover:underline"
           >
-            {isLogin ? "Registrati" : "Accedi"}
+            {isLogin ? "Registrati" : "Login"}
           </button>
         </p>
       </form>

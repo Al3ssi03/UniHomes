@@ -36,6 +36,30 @@ const passwordResetTokens = new Map();
 
 app.use("/auth", authRoutes);
 
+app.get("/listings", (req, res) => {
+  const { city, type, maxPrice, university } = req.query;
+  let filtered = [...listings];
+
+  if (city) {
+    filtered = filtered.filter((l) =>
+      l.city.toLowerCase().includes(city.toLowerCase())
+    );
+  }
+  if (type) {
+    filtered = filtered.filter((l) => l.type === type);
+  }
+  if (maxPrice) {
+    filtered = filtered.filter((l) => l.price <= parseFloat(maxPrice));
+  }
+  if (university) {
+    filtered = filtered.filter((l) =>
+      l.university && l.university.toLowerCase().includes(university.toLowerCase())
+    );
+  }
+
+  res.json(filtered);
+});
+
 app.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   const user = users.find((u) => u.email === email);

@@ -1,6 +1,7 @@
 // 📁 src/pages/ListingsPage.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -168,10 +169,13 @@ export default function ListingsPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {paginatedListings.map((listing) => (
-          <div key={listing.id} className="bg-white shadow rounded-lg overflow-hidden transition hover:shadow-md relative">
+          <Link to={`/annuncio/${listing.id}`} key={listing.id} className="bg-white shadow rounded-lg overflow-hidden transition hover:shadow-md relative block">
             <button
-              onClick={() => toggleFavorite(listing.id)}
-              className={`absolute top-2 right-2 text-xl ${favorites.includes(listing.id) ? "text-red-500" : "text-gray-400 hover:text-red-400"}`}
+              onClick={(e) => {
+                e.preventDefault();
+                toggleFavorite(listing.id);
+              }}
+              className={`absolute top-2 right-2 text-xl z-10 ${favorites.includes(listing.id) ? "text-red-500" : "text-gray-400 hover:text-red-400"}`}
             >
               ♥
             </button>
@@ -183,13 +187,16 @@ export default function ListingsPage() {
             <div className="p-4 space-y-1">
               <h3 className="text-lg font-bold text-gray-800">{listing.title}</h3>
               <p className="text-sm text-gray-600">{listing.city} - €{listing.price}/mese</p>
+              {listing.authorName && (
+                <p className="text-xs text-gray-500">Pubblicato da: {listing.authorName}</p>
+              )}
               {userLocation && listing.lat && listing.lng && (
                 <p className="text-xs text-gray-400">
                   📍 A circa {Math.round(haversineDistance(userLocation, { lat: listing.lat, lng: listing.lng }))} km da te
                 </p>
               )}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

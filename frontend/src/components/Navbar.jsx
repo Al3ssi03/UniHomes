@@ -50,6 +50,7 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
+            <Link to="/profilo" className="hover:underline">Profilo</Link>
             <button onClick={handleLogout} className="text-sm text-red-600 hover:underline">
               Logout
             </button>

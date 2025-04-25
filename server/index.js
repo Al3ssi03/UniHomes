@@ -60,6 +60,11 @@ app.get("/listings", (req, res) => {
   res.json(filtered);
 });
 
+app.get("/my-listings", authMiddleware, (req, res) => {
+  const userListings = listings.filter((l) => l.userId === req.user.id);
+  res.json(userListings);
+});
+
 app.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   const user = users.find((u) => u.email === email);
@@ -89,6 +94,50 @@ app.post("/reset-password/:token", (req, res) => {
   user.password = newPassword;
   passwordResetTokens.delete(token);
   res.json({ message: "Password aggiornata con successo" });
+});
+
+app.post("/listings", authMiddleware, upload.single("image"), (req, res) => {
+  const {
+    title,
+    city,
+    address,
+    price,
+    type,
+    description,
+    university,
+    services,
+    available_from,
+    lat,
+    lng
+  } = req.body;
+
+  const newListing = {
+    id: Date.now(),
+    title,
+    city,
+    address,
+    price: parseFloat(price),
+    type,
+    description,
+    university,
+    services: JSON.parse(services),
+    available_from,
+    imageUrl: req.file ? `/uploads/${req.file.filename}` : null,
+    userId: req.user.id,
+    authorName: req.user.name || "Utente", // <- questo salva il nome
+    lat: lat ? parseFloat(lat) : null,
+    lng: lng ? parseFloat(lng) : null,
+    createdAt: new Date()
+  };
+
+  listings.push(newListing);
+  res.status(201).json({ message: "Annuncio creato!", listing: newListing });
+});
+
+app.get("/listings/:id", (req, res) => {
+  const listing = listings.find((l) => l.id === parseInt(req.params.id));
+  if (!listing) return res.status(404).json({ message: "Annuncio non trovato" });
+  res.json(listing);
 });
 
 app.listen(PORT, () => console.log(`✅ Server avviato su http://localhost:${PORT}`));

@@ -42,6 +42,7 @@ export default function ListingDetailPage() {
         {listing.university && <p><strong>Vicino a:</strong> {listing.university}</p>}
         <p className="text-sm text-gray-600"><strong>Servizi:</strong> {listing.services.join(", ")}</p>
         <p className="pt-2"><strong>Descrizione:</strong><br />{listing.description}</p>
+        {listing.userId && <p className="text-sm text-gray-500 pt-4">Pubblicato da utente ID: {listing.userId}</p>}
       </div>
     </div>
   );

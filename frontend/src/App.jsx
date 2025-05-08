@@ -10,6 +10,7 @@ import EditListingPage from "./pages/EditListingPage";
 import ListingDetailPage from "./pages/ListingDetailPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import UserProfilePage from "./pages/UserProfilePage";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/annuncio/:id" element={<ListingDetailPage />} />
         <Route path="/recupera-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/profilo" element={<UserProfilePage />} />
       </Routes>
     </Router>
   );

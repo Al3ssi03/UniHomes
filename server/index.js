@@ -5,7 +5,7 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { authRoutes, authMiddleware } = require("./auth");
+const { authRoutes, authMiddleware, users } = require("./auth");
 const { sendPasswordResetEmail } = require("./mailer");
 const app = express();
 const PORT = 3001;
@@ -31,7 +31,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const listings = [];
-const users = []; // array utenti fittizi
 const passwordResetTokens = new Map();
 
 app.use("/auth", authRoutes);

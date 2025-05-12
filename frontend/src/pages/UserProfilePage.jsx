@@ -4,10 +4,12 @@ import { Link } from "react-router-dom";
 
 export default function UserProfilePage() {
   const [profile, setProfile] = useState({
-    name: "",
-    bio: "",
-    email: "",
+    firstName: "",
+    lastName: "",
+    birthYear: "",
     phone: "",
+    email: "",
+    bio: "",
   });
 
   const handleChange = (e) => {
@@ -26,17 +28,25 @@ export default function UserProfilePage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          name="name"
-          placeholder="Nome completo"
-          value={profile.name}
+          name="firstName"
+          placeholder="Nome"
+          value={profile.firstName}
           onChange={handleChange}
           className="w-full border p-2 rounded"
         />
         <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={profile.email}
+          type="text"
+          name="lastName"
+          placeholder="Cognome"
+          value={profile.lastName}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        />
+        <input
+          type="number"
+          name="birthYear"
+          placeholder="Anno di nascita"
+          value={profile.birthYear}
           onChange={handleChange}
           className="w-full border p-2 rounded"
         />
@@ -45,6 +55,14 @@ export default function UserProfilePage() {
           name="phone"
           placeholder="Telefono"
           value={profile.phone}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={profile.email}
           onChange={handleChange}
           className="w-full border p-2 rounded"
         />

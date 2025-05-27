@@ -1,161 +1,181 @@
-const express = require("express");
-const cors = require("cors");
-const multer = require("multer");
-const fs = require("fs");
-const path = require("path");
-const crypto = require("crypto");
-const announcementRoutes = require('./routes/announcements'); // ✅ corretta
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
 
-require("dotenv").config();
+// Importa configurazione database
+const sequelize = require('./config/db');
 
+// Importa modelli per assicurarsi che le relazioni siano definite
+require('./models/user');
+require('./models/announcement');
+require('./models/message');
+
+// Importa routes
 const authRoutes = require('./routes/auth');
+const announcementsRoutes = require('./routes/announcements');
+const profileRoutes = require('./routes/profile');
+const messagesRoutes = require('./routes/messages');
 
-// const { authMiddleware, users } = require("./auth"); ← disattivato, lo rifaremo con DB + JWT
-const { sendPasswordResetEmail } = require("./mailer");
-
-const PORT = 3001;
 const app = express();
+const PORT = process.env.PORT || 5000;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/api/auth", authRoutes); // <-- giusta posizione
-app.use('/api/announcements', announcementRoutes);
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, "uploads");
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-});
-const upload = multer({ storage });
 
-const listings = [];
-const passwordResetTokens = new Map();
+// Servire file statici (immagini upload)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 🔒 Queste rotte dovranno essere collegate a utenti reali dal DB con JWT o sessione
-app.get("/listings", (req, res) => {
-  const { city, type, maxPrice, university } = req.query;
-  let filtered = [...listings];
-
-  if (city) {
-    filtered = filtered.filter((l) =>
-      l.city.toLowerCase().includes(city.toLowerCase())
-    );
-  }
-  if (type) {
-    filtered = filtered.filter((l) => l.type === type);
-  }
-  if (maxPrice) {
-    filtered = filtered.filter((l) => l.price <= parseFloat(maxPrice));
-  }
-  if (university) {
-    filtered = filtered.filter((l) =>
-      l.university && l.university.toLowerCase().includes(university.toLowerCase())
-    );
-  }
-
-  res.json(filtered);
+// Middleware per logging delle richieste (opzionale)
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
+  next();
 });
 
-app.get("/my-listings", /* authMiddleware, */ (req, res) => {
-  // ⚠️ authMiddleware va riscritto con JWT o sessione
-  res.status(501).json({ message: "Da implementare con autenticazione" });
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/announcements', announcementsRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/messages', messagesRoutes);
+
+// Route di test
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Server FuoriSede/UniHomes funzionante!' });
 });
 
-app.post("/forgot-password", async (req, res) => {
-  const { email } = req.body;
-
-  // ⚠️ questa logica era basata su array users in memoria
-  // va riscritta quando gli utenti sono persistenti in DB
-  return res.status(501).json({ message: "Funzionalità in aggiornamento" });
-
-  /*
-  const user = users.find((u) => u.email === email);
-  if (!user) return res.status(404).json({ message: "Utente non trovato" });
-
-  const token = crypto.randomBytes(32).toString("hex");
-  passwordResetTokens.set(token, user.email);
-
+// Route per recuperare info server
+app.get('/api/info', async (req, res) => {
   try {
-    await sendPasswordResetEmail(email, token);
-    res.json({ message: "Email inviata con successo" });
-  } catch (err) {
-    console.error("Errore invio email:", err);
-    res.status(500).json({ message: "Errore nell'invio dell'email" });
+    const User = require('./models/user');
+    const Announcement = require('./models/announcement');
+    const Message = require('./models/message');
+    
+    const usersCount = await User.count();
+    const announcementsCount = await Announcement.count();
+    const messagesCount = await Message.count();
+    
+    res.json({
+      appName: 'FuoriSede/UniHomes',
+      version: '1.0.0',
+      status: 'online',
+      database: 'connected',
+      stats: {
+        users: usersCount,
+        announcements: announcementsCount,
+        messages: messagesCount
+      },
+      endpoints: {
+        auth: '/api/auth',
+        announcements: '/api/announcements',
+        profile: '/api/profile',
+        messages: '/api/messages'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      appName: 'FuoriSede/UniHomes',
+      status: 'error',
+      database: 'disconnected',
+      error: error.message
+    });
   }
-  */
 });
 
-app.post("/reset-password/:token", (req, res) => {
-  return res.status(501).json({ message: "Da implementare con DB utenti" });
-
-  /*
-  const { token } = req.params;
-  const { newPassword } = req.body;
-  const email = passwordResetTokens.get(token);
-
-  if (!email) return res.status(400).json({ message: "Token non valido o scaduto" });
-  const user = users.find((u) => u.email === email);
-  if (!user) return res.status(404).json({ message: "Utente non trovato" });
-
-  user.password = newPassword;
-  passwordResetTokens.delete(token);
-  res.json({ message: "Password aggiornata con successo" });
-  */
+// Middleware per gestire 404
+app.use((req, res) => {
+  res.status(404).json({ 
+    message: 'Endpoint non trovato',
+    availableEndpoints: [
+      'GET /api/test',
+      'GET /api/info',
+      'POST /api/auth/register',
+      'POST /api/auth/login',
+      'GET /api/announcements',
+      'POST /api/announcements',
+      'GET /api/profile',
+      'GET /api/messages/conversations'
+    ]
+  });
 });
 
-app.post("/listings", /* authMiddleware, */ upload.single("image"), (req, res) => {
-  // ⚠️ authMiddleware da sostituire con token o sessione
-
-  const {
-    title,
-    city,
-    address,
-    price,
-    type,
-    description,
-    university,
-    services,
-    available_from,
-    lat,
-    lng
-  } = req.body;
-
-  const newListing = {
-    id: Date.now(),
-    title,
-    city,
-    address,
-    price: parseFloat(price),
-    type,
-    description,
-    university,
-    services: JSON.parse(services),
-    available_from,
-    imageUrl: req.file ? `/uploads/${req.file.filename}` : null,
-    userId: "dummy", // sostituire con req.user.id da token JWT
-    authorName: "Utente", // sostituire con req.user.name
-    lat: lat ? parseFloat(lat) : null,
-    lng: lng ? parseFloat(lng) : null,
-    createdAt: new Date()
-  };
-
-  listings.push(newListing);
-  res.status(201).json({ message: "Annuncio creato!", listing: newListing });
+// Middleware per gestire errori
+app.use((error, req, res, next) => {
+  console.error('Errore server:', error);
+  
+  if (error.name === 'ValidationError') {
+    return res.status(400).json({
+      message: 'Errore di validazione',
+      errors: error.errors
+    });
+  }
+  
+  if (error.name === 'MulterError') {
+    return res.status(400).json({
+      message: 'Errore upload file',
+      error: error.message
+    });
+  }
+  
+  res.status(500).json({
+    message: 'Errore interno del server',
+    ...(process.env.NODE_ENV === 'development' && { error: error.message })
+  });
 });
 
-app.get("/listings/:id", (req, res) => {
-  const listing = listings.find((l) => l.id === parseInt(req.params.id));
-  if (!listing) return res.status(404).json({ message: "Annuncio non trovato" });
-  res.json(listing);
+// Funzione per avviare il server
+async function startServer() {
+  try {
+    // Test connessione database
+    await sequelize.authenticate();
+    console.log('✅ Connessione database stabilita');
+    
+    // Sincronizza modelli (solo in sviluppo)
+    if (process.env.NODE_ENV !== 'production') {
+      await sequelize.sync({ alter: true });
+      console.log('✅ Modelli database sincronizzati');
+    }
+    
+    // Avvia server
+    app.listen(PORT, () => {
+      console.log('\n🚀 Server FuoriSede/UniHomes avviato!');
+      console.log(`📡 Server in ascolto su porta ${PORT}`);
+      console.log(`🌐 Base URL: http://localhost:${PORT}`);
+      console.log(`📋 Info API: http://localhost:${PORT}/api/info`);
+      console.log(`🧪 Test endpoint: http://localhost:${PORT}/api/test`);
+      console.log('\n📚 Endpoints disponibili:');
+      console.log('   Auth: /api/auth/[register|login]');
+      console.log('   Annunci: /api/announcements');
+      console.log('   Profilo: /api/profile');
+      console.log('   Messaggi: /api/messages');
+      console.log('\n✨ Server pronto per le richieste!');
+    });
+    
+  } catch (error) {
+    console.error('❌ Errore avvio server:', error);
+    process.exit(1);
+  }
+}
+
+// Gestione graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('\n🔄 Shutdown del server in corso...');
+  await sequelize.close();
+  console.log('✅ Connessioni database chiuse');
+  process.exit(0);
 });
 
-app.listen(PORT, () =>
-  console.log(`✅ Server avviato su http://localhost:${PORT}`)
-);
+process.on('SIGINT', async () => {
+  console.log('\n🔄 Shutdown del server in corso...');
+  await sequelize.close();
+  console.log('✅ Connessioni database chiuse');
+  process.exit(0);
+});
+
+// Avvia il server
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;

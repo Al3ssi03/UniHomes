@@ -1,80 +1,263 @@
 const express = require('express');
-const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const Announcement = require('../models/announcement');
 const User = require('../models/user');
+const { Op } = require('sequelize');
+const router = express.Router();
 
-// Upload config
+// Configurazione multer per upload immagini
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(__dirname, "../uploads");
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-    cb(null, dir);
+    cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueName + path.extname(file.originalname));
-  },
-});
-const upload = multer({ storage });
-
-// Crea annuncio
-router.post("/", upload.single("image"), async (req, res) => {
-  try {
-    const {
-      titolo,
-      descrizione,
-      prezzo,
-      città,
-      indirizzo,
-      lat,
-      lng,
-      userId
-    } = req.body;
-
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
-
-    const annuncio = await Announcement.create({
-      titolo,
-      descrizione,
-      prezzo,
-      città,
-      indirizzo,
-      immagini: imageUrl ? [imageUrl] : [],
-      lat,
-      lng,
-      userId
-    });
-
-    res.status(201).json({ message: "Annuncio creato", annuncio });
-  } catch (error) {
-    console.error("Errore creazione annuncio:", error);
-    res.status(500).json({ message: "Errore server" });
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
-// Tutti gli annunci
-router.get("/", async (req, res) => {
-  const annunci = await Announcement.findAll({ include: User });
-  res.json(annunci);
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png|webp/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Solo immagini sono consentite (jpeg, jpg, png, webp)'));
+    }
+  }
 });
 
-// Annuncio singolo
-router.get("/:id", async (req, res) => {
-  const annuncio = await Announcement.findByPk(req.params.id, { include: User });
-  if (!annuncio) return res.status(404).json({ message: "Annuncio non trovato" });
-  res.json(annuncio);
+// MIDDLEWARE per verificare autenticazione (da migliorare con JWT)
+const requireAuth = (req, res, next) => {
+  const userId = req.headers['user-id']; // Temporaneo, da sostituire con JWT
+  if (!userId) {
+    return res.status(401).json({ message: 'Accesso non autorizzato' });
+  }
+  req.userId = userId;
+  next();
+};
+
+// GET - Recupera tutti gli annunci con filtri
+router.get('/', async (req, res) => {
+  try {
+    const { citta, prezzoMin, prezzoMax, tipologia, stanze, page = 1, limit = 10 } = req.query;
+    
+    // Costruisci la query dinamicamente
+    const whereClause = {};
+    
+    if (citta && citta !== '') {
+      whereClause.città = {
+        [Op.iLike]: `%${citta}%` // Case insensitive search
+      };
+    }
+    
+    if (prezzoMin || prezzoMax) {
+      whereClause.prezzo = {};
+      if (prezzoMin) whereClause.prezzo[Op.gte] = parseFloat(prezzoMin);
+      if (prezzoMax) whereClause.prezzo[Op.lte] = parseFloat(prezzoMax);
+    }
+    
+    // Se hai un campo tipologia nel model, aggiungi:
+    // if (tipologia) whereClause.tipologia = tipologia;
+    
+    const offset = (page - 1) * limit;
+    
+    const announcements = await Announcement.findAndCountAll({
+      where: whereClause,
+      include: [{
+        model: User,
+        attributes: ['id', 'nome', 'cognome', 'username'] // Non includere password_hash
+      }],
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+    
+    res.json({
+      announcements: announcements.rows,
+      totalCount: announcements.count,
+      totalPages: Math.ceil(announcements.count / limit),
+      currentPage: parseInt(page)
+    });
+  } catch (error) {
+    console.error('Errore recupero annunci:', error);
+    res.status(500).json({ message: 'Errore durante il recupero degli annunci' });
+  }
 });
 
-// Annunci per utente
-router.get("/user/:userId", async (req, res) => {
-  const annunci = await Announcement.findAll({
-    where: { userId: req.params.userId },
-    include: User
-  });
-  res.json(annunci);
+// GET - Recupera singolo annuncio per ID
+router.get('/:id', async (req, res) => {
+  try {
+    const announcement = await Announcement.findByPk(req.params.id, {
+      include: [{
+        model: User,
+        attributes: ['id', 'nome', 'cognome', 'username', 'telefono']
+      }]
+    });
+    
+    if (!announcement) {
+      return res.status(404).json({ message: 'Annuncio non trovato' });
+    }
+    
+    res.json(announcement);
+  } catch (error) {
+    console.error('Errore recupero annuncio:', error);
+    res.status(500).json({ message: 'Errore durante il recupero dell\'annuncio' });
+  }
+});
+
+// POST - Crea nuovo annuncio
+router.post('/', requireAuth, upload.array('immagini', 5), async (req, res) => {
+  try {
+    const { titolo, descrizione, prezzo, città, indirizzo, lat, lng } = req.body;
+    
+    // Validation
+    if (!titolo || !prezzo || !città) {
+      return res.status(400).json({ 
+        message: 'Titolo, prezzo e città sono obbligatori' 
+      });
+    }
+    
+    // Processa le immagini caricate
+    const immaginiPaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+    
+    const newAnnouncement = await Announcement.create({
+      titolo,
+      descrizione,
+      prezzo: parseFloat(prezzo),
+      città,
+      indirizzo,
+      immagini: immaginiPaths,
+      lat: lat ? parseFloat(lat) : null,
+      lng: lng ? parseFloat(lng) : null,
+      userId: req.userId
+    });
+    
+    // Recupera l'annuncio con i dati dell'utente
+    const announcementWithUser = await Announcement.findByPk(newAnnouncement.id, {
+      include: [{
+        model: User,
+        attributes: ['id', 'nome', 'cognome', 'username']
+      }]
+    });
+    
+    res.status(201).json({
+      message: 'Annuncio creato con successo',
+      announcement: announcementWithUser
+    });
+  } catch (error) {
+    console.error('Errore creazione annuncio:', error);
+    res.status(500).json({ message: 'Errore durante la creazione dell\'annuncio' });
+  }
+});
+
+// PUT - Modifica annuncio (solo proprietario)
+router.put('/:id', requireAuth, upload.array('nuove_immagini', 5), async (req, res) => {
+  try {
+    const announcement = await Announcement.findByPk(req.params.id);
+    
+    if (!announcement) {
+      return res.status(404).json({ message: 'Annuncio non trovato' });
+    }
+    
+    // Verifica che l'utente sia il proprietario
+    if (announcement.userId != req.userId) {
+      return res.status(403).json({ message: 'Non autorizzato a modificare questo annuncio' });
+    }
+    
+    const { titolo, descrizione, prezzo, città, indirizzo, lat, lng, mantieni_immagini } = req.body;
+    
+    // Gestione immagini
+    let immaginiAggiornate = [];
+    
+    // Se mantieni_immagini è specificato, mantieni quelle esistenti
+    if (mantieni_immagini) {
+      const immaginiDaMantenere = JSON.parse(mantieni_immagini);
+      immaginiAggiornate = immaginiDaMantenere;
+    }
+    
+    // Aggiungi nuove immagini se caricate
+    if (req.files && req.files.length > 0) {
+      const nuoveImmagini = req.files.map(file => `/uploads/${file.filename}`);
+      immaginiAggiornate = [...immaginiAggiornate, ...nuoveImmagini];
+    }
+    
+    // Aggiorna l'annuncio
+    await announcement.update({
+      titolo: titolo || announcement.titolo,
+      descrizione: descrizione || announcement.descrizione,
+      prezzo: prezzo ? parseFloat(prezzo) : announcement.prezzo,
+      città: città || announcement.città,
+      indirizzo: indirizzo || announcement.indirizzo,
+      immagini: immaginiAggiornate.length > 0 ? immaginiAggiornate : announcement.immagini,
+      lat: lat ? parseFloat(lat) : announcement.lat,
+      lng: lng ? parseFloat(lng) : announcement.lng
+    });
+    
+    // Recupera l'annuncio aggiornato con i dati dell'utente
+    const updatedAnnouncement = await Announcement.findByPk(announcement.id, {
+      include: [{
+        model: User,
+        attributes: ['id', 'nome', 'cognome', 'username']
+      }]
+    });
+    
+    res.json({
+      message: 'Annuncio aggiornato con successo',
+      announcement: updatedAnnouncement
+    });
+  } catch (error) {
+    console.error('Errore modifica annuncio:', error);
+    res.status(500).json({ message: 'Errore durante la modifica dell\'annuncio' });
+  }
+});
+
+// DELETE - Elimina annuncio (solo proprietario)
+router.delete('/:id', requireAuth, async (req, res) => {
+  try {
+    const announcement = await Announcement.findByPk(req.params.id);
+    
+    if (!announcement) {
+      return res.status(404).json({ message: 'Annuncio non trovato' });
+    }
+    
+    // Verifica che l'utente sia il proprietario
+    if (announcement.userId != req.userId) {
+      return res.status(403).json({ message: 'Non autorizzato a eliminare questo annuncio' });
+    }
+    
+    await announcement.destroy();
+    
+    res.json({ message: 'Annuncio eliminato con successo' });
+  } catch (error) {
+    console.error('Errore eliminazione annuncio:', error);
+    res.status(500).json({ message: 'Errore durante l\'eliminazione dell\'annuncio' });
+  }
+});
+
+// GET - Recupera annunci dell'utente loggato
+router.get('/user/my-announcements', requireAuth, async (req, res) => {
+  try {
+    const announcements = await Announcement.findAll({
+      where: { userId: req.userId },
+      include: [{
+        model: User,
+        attributes: ['id', 'nome', 'cognome', 'username']
+      }],
+      order: [['createdAt', 'DESC']]
+    });
+    
+    res.json(announcements);
+  } catch (error) {
+    console.error('Errore recupero annunci utente:', error);
+    res.status(500).json({ message: 'Errore durante il recupero degli annunci' });
+  }
 });
 
 module.exports = router;

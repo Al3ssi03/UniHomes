@@ -1,22 +1,27 @@
-// 📁 server/index.js
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { authRoutes, authMiddleware, users } = require("./auth");
-const { sendPasswordResetEmail } = require("./mailer");
-const app = express();
-const PORT = 3001;
+const announcementRoutes = require('./routes/announcements'); // ✅ corretta
 
 require("dotenv").config();
+
+const authRoutes = require('./routes/auth');
+
+// const { authMiddleware, users } = require("./auth"); ← disattivato, lo rifaremo con DB + JWT
+const { sendPasswordResetEmail } = require("./mailer");
+
+const PORT = 3001;
+const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
+app.use("/api/auth", authRoutes); // <-- giusta posizione
+app.use('/api/announcements', announcementRoutes);
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = path.join(__dirname, "uploads");
@@ -33,8 +38,7 @@ const upload = multer({ storage });
 const listings = [];
 const passwordResetTokens = new Map();
 
-app.use("/auth", authRoutes);
-
+// 🔒 Queste rotte dovranno essere collegate a utenti reali dal DB con JWT o sessione
 app.get("/listings", (req, res) => {
   const { city, type, maxPrice, university } = req.query;
   let filtered = [...listings];
@@ -59,13 +63,19 @@ app.get("/listings", (req, res) => {
   res.json(filtered);
 });
 
-app.get("/my-listings", authMiddleware, (req, res) => {
-  const userListings = listings.filter((l) => l.userId === req.user.id);
-  res.json(userListings);
+app.get("/my-listings", /* authMiddleware, */ (req, res) => {
+  // ⚠️ authMiddleware va riscritto con JWT o sessione
+  res.status(501).json({ message: "Da implementare con autenticazione" });
 });
 
 app.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
+
+  // ⚠️ questa logica era basata su array users in memoria
+  // va riscritta quando gli utenti sono persistenti in DB
+  return res.status(501).json({ message: "Funzionalità in aggiornamento" });
+
+  /*
   const user = users.find((u) => u.email === email);
   if (!user) return res.status(404).json({ message: "Utente non trovato" });
 
@@ -79,9 +89,13 @@ app.post("/forgot-password", async (req, res) => {
     console.error("Errore invio email:", err);
     res.status(500).json({ message: "Errore nell'invio dell'email" });
   }
+  */
 });
 
 app.post("/reset-password/:token", (req, res) => {
+  return res.status(501).json({ message: "Da implementare con DB utenti" });
+
+  /*
   const { token } = req.params;
   const { newPassword } = req.body;
   const email = passwordResetTokens.get(token);
@@ -93,9 +107,12 @@ app.post("/reset-password/:token", (req, res) => {
   user.password = newPassword;
   passwordResetTokens.delete(token);
   res.json({ message: "Password aggiornata con successo" });
+  */
 });
 
-app.post("/listings", authMiddleware, upload.single("image"), (req, res) => {
+app.post("/listings", /* authMiddleware, */ upload.single("image"), (req, res) => {
+  // ⚠️ authMiddleware da sostituire con token o sessione
+
   const {
     title,
     city,
@@ -122,8 +139,8 @@ app.post("/listings", authMiddleware, upload.single("image"), (req, res) => {
     services: JSON.parse(services),
     available_from,
     imageUrl: req.file ? `/uploads/${req.file.filename}` : null,
-    userId: req.user.id,
-    authorName: req.user.name || "Utente", // <- questo salva il nome
+    userId: "dummy", // sostituire con req.user.id da token JWT
+    authorName: "Utente", // sostituire con req.user.name
     lat: lat ? parseFloat(lat) : null,
     lng: lng ? parseFloat(lng) : null,
     createdAt: new Date()
@@ -139,4 +156,6 @@ app.get("/listings/:id", (req, res) => {
   res.json(listing);
 });
 
-app.listen(PORT, () => console.log(`✅ Server avviato su http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`✅ Server avviato su http://localhost:${PORT}`)
+);

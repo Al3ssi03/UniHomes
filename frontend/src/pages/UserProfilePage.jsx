@@ -1,5 +1,5 @@
 // 📁 src/pages/UserProfilePage.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function UserProfilePage() {
@@ -12,14 +12,19 @@ export default function UserProfilePage() {
     bio: "",
   });
 
+  useEffect(() => {
+    const saved = localStorage.getItem("profile");
+    if (saved) setProfile(JSON.parse(saved));A
+  }, []);
+
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Profilo salvato:", profile);
-    alert("Profilo aggiornato (mock)!");
+    localStorage.setItem("profile", JSON.stringify(profile));
+    alert("Profilo aggiornato!");
   };
 
   return (

@@ -52,11 +52,24 @@ export default function ListingsPage() {
   const fetchListings = async () => {
     try {
       const query = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (key !== "maxDistance" && value) query.append(key, value);
-      });
-      const res = await axios.get(`http://localhost:3001/api/announcements?${query.toString()}`);
-      let data = res.data;
+
+      if (filters.city) query.append("citta", filters.city);
+      if (filters.maxPrice) query.append("prezzoMax", filters.maxPrice);
+      if (filters.type) query.append("tipologia", filters.type);
+      const res = await axios.get(`http://localhost:5000/api/announcements?${query.toString()}`);
+      let data = res.data.announcements.map((a) => ({
+        id: a.id,
+        title: a.titolo,
+        city: a.citt\u00e0,
+        address: a.indirizzo,
+        price: a.prezzo,
+        type: a.tipologia || "",
+        description: a.descrizione,
+        imageUrl: a.immagini && a.immagini[0],
+        lat: a.lat,
+        lng: a.lng,
+        User: a.User,
+      }));
 
       if (userLocation && filters.maxDistance) {
         const maxDist = parseFloat(filters.maxDistance);
@@ -180,15 +193,15 @@ export default function ListingsPage() {
               ♥
             </button>
             <img
-              src={`http://localhost:3001${listing.imageUrl}`}
+              src={`http://localhost:5000${listing.imageUrl}`}
               alt="Annuncio"
               className="w-full h-48 object-cover"
             />
             <div className="p-4 space-y-1">
               <h3 className="text-lg font-bold text-gray-800">{listing.title}</h3>
               <p className="text-sm text-gray-600">{listing.city} - €{listing.price}/mese</p>
-              {listing.authorName && (
-                <p className="text-xs text-gray-500">Pubblicato da: {listing.authorName}</p>
+              {listing.User && (
+                <p className="text-xs text-gray-500">Pubblicato da: {listing.User.nome} {listing.User.cognome}</p>
               )}
               {userLocation && listing.lat && listing.lng && (
                 <p className="text-xs text-gray-400">

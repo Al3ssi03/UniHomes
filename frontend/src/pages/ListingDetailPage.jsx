@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import ListingChat from "../components/ListingChat";
 
 export default function ListingDetailPage() {
   const { id } = useParams();
@@ -10,8 +11,24 @@ export default function ListingDetailPage() {
   useEffect(() => {
     const fetchListing = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/api/announcements/${id}`);
-        setListing(res.data);
+
+        const res = await axios.get(`http://localhost:5000/api/announcements/${id}`);
+        const a = res.data;
+        setListing({
+          id: a.id,
+          title: a.titolo,
+          city: a.citt\u00e0,
+          address: a.indirizzo,
+          price: a.prezzo,
+          type: a.tipologia || "",
+          description: a.descrizione,
+          services: [],
+          imageUrl: a.immagini && a.immagini[0],
+          available_from: a.disponibile_da,
+          university: a.universit\u00e0,
+          User: a.User,
+        });
+
       } catch (err) {
         console.error("Errore nel recupero dell'annuncio:", err);
       }
@@ -27,7 +44,7 @@ export default function ListingDetailPage() {
 
       {listing.imageUrl && (
         <img
-          src={`http://localhost:3001${listing.imageUrl}`}
+          src={`http://localhost:5000${listing.imageUrl}`}
           alt="Alloggio"
           className="w-full h-64 object-cover rounded mb-6 shadow"
         />
@@ -42,8 +59,15 @@ export default function ListingDetailPage() {
         {listing.university && <p><strong>Vicino a:</strong> {listing.university}</p>}
         <p className="text-sm text-gray-600"><strong>Servizi:</strong> {listing.services.join(", ")}</p>
         <p className="pt-2"><strong>Descrizione:</strong><br />{listing.description}</p>
-        {listing.userId && <p className="text-sm text-gray-500 pt-4">Pubblicato da utente ID: {listing.userId}</p>}
+        {listing.User && (
+          <p className="text-sm text-gray-500 pt-4">Pubblicato da: {listing.User.nome} {listing.User.cognome}</p>
+        )}
       </div>
+      {listing.User && (
+        <div className="mt-6">
+          <ListingChat listingId={listing.id} receiverId={listing.User.id} />
+        </div>
+      )}
     </div>
   );
 }

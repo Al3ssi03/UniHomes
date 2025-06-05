@@ -8,11 +8,11 @@ export default function InboxPage() {
 
   useEffect(() => {
     const fetchMessages = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
       try {
-        const res = await axios.get("http://localhost:3001/notifications", {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await axios.get("http://localhost:5000/api/messages/conversations", {
+          headers: { "user-id": userId },
         });
         setMessages(res.data);
       } catch (err) {
@@ -31,19 +31,14 @@ export default function InboxPage() {
       ) : (
         <ul className="space-y-4">
           {messages.map((msg) => (
-            <li key={msg.id} className="bg-white border border-gray-200 p-4 rounded shadow hover:shadow-md transition">
+            <li key={msg.partnerId} className="bg-white border border-gray-200 p-4 rounded shadow hover:shadow-md transition">
               <p className="text-gray-800">
-                <span className="font-semibold">Annuncio #{msg.listingId}</span>: {msg.content}
+                Conversazione con {msg.partner.nome} {msg.partner.cognome}
               </p>
-              <p className="text-sm text-gray-500 mt-1">Ricevuto il: {new Date(msg.timestamp).toLocaleString()}</p>
-              <div className="mt-2">
-                <Link
-                  to={`/annuncio/${msg.listingId}`}
-                  className="text-blue-600 hover:underline text-sm"
-                >
-                  Apri conversazione ↗
-                </Link>
-              </div>
+              {msg.lastMessage && (
+                <p className="text-sm text-gray-500 mt-1">Ultimo messaggio: {msg.lastMessage.contenuto}</p>
+              )}
+              <div className="mt-2 text-sm text-gray-600">Messaggi non letti: {msg.unreadCount}</div>
             </li>
           ))}
         </ul>

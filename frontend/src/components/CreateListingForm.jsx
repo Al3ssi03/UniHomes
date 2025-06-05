@@ -43,24 +43,34 @@ export default function CreateListingForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
     const data = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       if (key === "services") {
-        data.append(key, JSON.stringify(value));
+        data.append("servizi", JSON.stringify(value));
       } else if (key !== "image") {
-        data.append(key, value);
+        const mappedKey = {
+          title: "titolo",
+          city: "citt\u00e0",
+          address: "indirizzo",
+          price: "prezzo",
+          type: "tipologia",
+          description: "descrizione",
+          university: "universit\u00e0",
+          available_from: "disponibile_da",
+        }[key];
+        if (mappedKey) data.append(mappedKey, value);
       }
     });
 
     if (formData.image) {
-      data.append("image", formData.image);
+      data.append("immagini", formData.image);
     }
 
     try {
-      await axios.post("http://localhost:3001/listings", data, {
+      await axios.post("http://localhost:5000/api/announcements", data, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          "user-id": userId,
           "Content-Type": "multipart/form-data",
         },
       });

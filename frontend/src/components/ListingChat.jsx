@@ -7,37 +7,36 @@ export default function ListingChat({ listingId, receiverId }) {
   const [newMessage, setNewMessage] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
     const fetchMessages = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/messages/${listingId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await axios.get(`http://localhost:5000/api/messages/conversation/${receiverId}`, {
+          headers: { "user-id": userId },
         });
-        setMessages(res.data);
+        setMessages(res.data.messages);
       } catch (err) {
         console.error("Errore nel recupero messaggi:", err);
       }
     };
     fetchMessages();
-  }, [listingId]);
+  }, [receiverId]);
 
   const handleSend = async () => {
-    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
     if (!newMessage.trim()) return;
     try {
       const res = await axios.post(
-        "http://localhost:3001/messages",
+        "http://localhost:5000/api/messages/send",
         {
-          listingId,
           receiverId,
-          content: newMessage,
+          contenuto: newMessage,
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { "user-id": userId },
         }
       );
-      setMessages((prev) => [...prev, res.data]);
+      setMessages((prev) => [...prev, res.data.data]);
       setNewMessage("");
     } catch (err) {
       alert("Errore nell'invio del messaggio");
@@ -57,7 +56,7 @@ export default function ListingChat({ listingId, receiverId }) {
                 : "bg-blue-100 text-right ml-auto"
             }`}
           >
-            {msg.content}
+            {msg.contenuto}
           </div>
         ))}
       </div>

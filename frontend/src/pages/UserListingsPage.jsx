@@ -12,7 +12,7 @@ export default function UserListingsPage() {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const res = await axios.get("http://localhost:3001/my-listings", {
+        const res = await axios.get("http://localhost:3001/api/announcements/user/my-announcements", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setListings(res.data);
@@ -27,7 +27,7 @@ export default function UserListingsPage() {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      await axios.delete(`http://localhost:3001/listings/${id}`, {
+      await axios.delete(`http://localhost:3001/api/announcements/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setListings((prev) => prev.filter((l) => l.id !== id));

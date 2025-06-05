@@ -11,6 +11,7 @@ export default function ListingDetailPage() {
   useEffect(() => {
     const fetchListing = async () => {
       try {
+
         const res = await axios.get(`http://localhost:5000/api/announcements/${id}`);
         const a = res.data;
         setListing({
@@ -27,6 +28,7 @@ export default function ListingDetailPage() {
           university: a.universit\u00e0,
           User: a.User,
         });
+
       } catch (err) {
         console.error("Errore nel recupero dell'annuncio:", err);
       }

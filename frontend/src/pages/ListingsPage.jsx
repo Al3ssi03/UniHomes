@@ -52,6 +52,7 @@ export default function ListingsPage() {
   const fetchListings = async () => {
     try {
       const query = new URLSearchParams();
+
       if (filters.city) query.append("citta", filters.city);
       if (filters.maxPrice) query.append("prezzoMax", filters.maxPrice);
       if (filters.type) query.append("tipologia", filters.type);

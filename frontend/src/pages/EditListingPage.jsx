@@ -13,7 +13,7 @@ export default function EditListingPage() {
       const token = localStorage.getItem("token");
       if (!token) return navigate("/auth");
       try {
-        const res = await axios.get(`http://localhost:3001/listings/${id}`);
+        const res = await axios.get(`http://localhost:3001/api/announcements/${id}`);
         setFormData({ ...res.data, services: res.data.services || [] });
       } catch (err) {
         alert("Errore nel caricamento dell'annuncio");
@@ -40,7 +40,7 @@ export default function EditListingPage() {
     e.preventDefault();
     const token = localStorage.getItem("token");
     try {
-      await axios.put(`http://localhost:3001/listings/${id}`, {
+      await axios.put(`http://localhost:3001/api/announcements/${id}`, {
         ...formData,
         services: JSON.stringify(formData.services),
       }, {

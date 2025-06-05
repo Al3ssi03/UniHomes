@@ -10,7 +10,7 @@ export default function ListingDetailPage() {
   useEffect(() => {
     const fetchListing = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/listings/${id}`);
+        const res = await axios.get(`http://localhost:3001/api/announcements/${id}`);
         setListing(res.data);
       } catch (err) {
         console.error("Errore nel recupero dell'annuncio:", err);

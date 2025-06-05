@@ -55,7 +55,7 @@ export default function ListingsPage() {
       Object.entries(filters).forEach(([key, value]) => {
         if (key !== "maxDistance" && value) query.append(key, value);
       });
-      const res = await axios.get(`http://localhost:3001/listings?${query.toString()}`);
+      const res = await axios.get(`http://localhost:3001/api/announcements?${query.toString()}`);
       let data = res.data;
 
       if (userLocation && filters.maxDistance) {

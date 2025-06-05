@@ -58,7 +58,7 @@ export default function CreateListingForm() {
     }
 
     try {
-      await axios.post("http://localhost:3001/listings", data, {
+      await axios.post("http://localhost:3001/api/announcements", data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

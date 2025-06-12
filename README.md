@@ -1,6 +1,33 @@
 # 🏠 AlloggiFinder - App di Ricerca Alloggi per Studenti e Lavoratori
 
+> ✨ **AGGIORNAMENTO GIUGNO 2025**: Sistema di autenticazione completamente implementato!
+
 AlloggiFinder è un'applicazione web full-stack che consente di pubblicare, cercare e gestire annunci di stanze o appartamenti in affitto, con funzionalità di messaggistica e notifiche integrate.
+
+## 🆕 Novità - Sistema di Autenticazione
+
+### ✅ Implementato
+- **🔐 Autenticazione Completa**: Login/Registrazione funzionante
+- **🔍 Diagnostica Real-time**: Verifica automatica stato backend
+- **📱 UI Responsive**: Design ottimizzato per desktop e mobile
+- **🛡️ Sicurezza**: JWT tokens, password hashing, validazione input
+- **🎯 UX Avanzata**: Loading states, error handling, form validation
+
+### 🚀 Avvio Rapido
+```bash
+# Avvia tutto automaticamente
+./AVVIA-SISTEMA-AUTH.bat
+
+# Oppure manualmente:
+# Terminal 1: Backend
+cd server && node index.js
+
+# Terminal 2: Frontend  
+cd frontend && npm run dev
+```
+
+### 🧪 Test Sistema
+Apri `TEST-SISTEMA-AUTH.html` per verificare che tutto funzioni correttamente.
 
 ---
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const multer = require('multer');
 require('dotenv').config();
 
 // Importa configurazione database
@@ -12,13 +13,48 @@ require('./models/announcement');
 require('./models/message');
 
 // Importa routes
-const authRoutes = require('./routes/auth');
+const { router: authRoutes } = require('./routes/auth');
 const announcementsRoutes = require('./routes/announcements');
 const profileRoutes = require('./routes/profile');
 const messagesRoutes = require('./routes/messages');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Configurazione upload file
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Solo immagini sono consentite'));
+    }
+  }
+});
+
+// Crea cartella uploads se non esiste
+const fs = require('fs');
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads');
+}
 
 // Middleware
 app.use(cors());

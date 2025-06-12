@@ -2,17 +2,11 @@ const express = require('express');
 const Message = require('../models/message');
 const User = require('../models/user');
 const { Op } = require('sequelize');
+const { authenticateToken } = require('./auth');
 const router = express.Router();
 
-// MIDDLEWARE per verificare autenticazione
-const requireAuth = (req, res, next) => {
-  const userId = req.headers['user-id']; // Temporaneo, da sostituire con JWT
-  if (!userId) {
-    return res.status(401).json({ message: 'Accesso non autorizzato' });
-  }
-  req.userId = parseInt(userId);
-  next();
-};
+// MIDDLEWARE per verificare autenticazione con JWT
+const requireAuth = authenticateToken;
 
 // GET - Recupera tutte le conversazioni dell'utente
 router.get('/conversations', requireAuth, async (req, res) => {

@@ -4,6 +4,7 @@ const path = require('path');
 const Announcement = require('../models/announcement');
 const User = require('../models/user');
 const { Op } = require('sequelize');
+const { authenticateToken } = require('./auth');
 const router = express.Router();
 
 // Configurazione multer per upload immagini
@@ -33,15 +34,8 @@ const upload = multer({
   }
 });
 
-// MIDDLEWARE per verificare autenticazione (da migliorare con JWT)
-const requireAuth = (req, res, next) => {
-  const userId = req.headers['user-id']; // Temporaneo, da sostituire con JWT
-  if (!userId) {
-    return res.status(401).json({ message: 'Accesso non autorizzato' });
-  }
-  req.userId = userId;
-  next();
-};
+// MIDDLEWARE per verificare autenticazione con JWT
+const requireAuth = authenticateToken;
 
 // GET - Recupera tutti gli annunci con filtri
 router.get('/', async (req, res) => {

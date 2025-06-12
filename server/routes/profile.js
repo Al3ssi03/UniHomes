@@ -2,17 +2,11 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
 const Announcement = require('../models/announcement');
+const { authenticateToken } = require('./auth');
 const router = express.Router();
 
-// MIDDLEWARE per verificare autenticazione
-const requireAuth = (req, res, next) => {
-  const userId = req.headers['user-id']; // Temporaneo, da sostituire con JWT
-  if (!userId) {
-    return res.status(401).json({ message: 'Accesso non autorizzato' });
-  }
-  req.userId = userId;
-  next();
-};
+// MIDDLEWARE per verificare autenticazione con JWT
+const requireAuth = authenticateToken;
 
 // GET - Recupera profilo utente
 router.get('/', requireAuth, async (req, res) => {

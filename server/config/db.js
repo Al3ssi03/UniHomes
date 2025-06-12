@@ -1,21 +1,20 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config({ path: 'C:\Users\HP 15-FA0005NL\Desktop\UniHomes\server\.env' }); // o './.env' se metti il .env in /server
+const path = require('path');
 
+// Carica variabili d'ambiente dal file .env nella directory server
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-
-
-
-
- const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  String(process.env.DB_PASSWORD),  // ← Forzatura importante
-  {
-    host: process.env.DB_HOST,
-    dialect: 'postgres',
-    port: Number(process.env.DB_PORT), // ← Anche il numero, per sicurezza
-    logging: false,
+// Usa SQLite per facilità di setup
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: path.join(__dirname, '..', 'database.sqlite'),
+  logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
   }
-); 
+});
 
 module.exports = sequelize;

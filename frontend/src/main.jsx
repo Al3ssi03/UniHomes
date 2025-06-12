@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App-UNIHome-Fixed.jsx";
+import App from "./App-UNIHome-Complete-Fixed.jsx";
 // import "./index.css"; // Commentato per evitare problemi CSS
 
-console.log("🚀 UNI Home - App Completa con Routing Moderno...");
+console.log("🚀 UNI Home - App Completa con Sistema di Autenticazione...");
 
 const rootElement = document.getElementById("root");
 console.log("Root element:", rootElement);

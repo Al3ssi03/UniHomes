@@ -1,28 +1,7 @@
-// UNI Home - Pagina di Autenticazione Moderna
-import { useState, useEffect, useContext, createContext } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-
-// Importa il context di autenticazione dal file principale
-let AuthContext;
-let useAuth;
-
-try {
-  // Prova a importare il context dal file principale
-  const appModule = require('../App-UNIHome-Complete-Fixed.jsx');
-  useAuth = appModule.useAuth;
-} catch (error) {
-  console.log('Context non disponibile, usando fallback');
-  // Fallback se il context non è disponibile
-  useAuth = () => ({
-    login: (userData, token) => {
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('userData', JSON.stringify(userData));
-      window.location.href = '/dashboard';
-    },
-    isAuthenticated: !!localStorage.getItem('authToken')
-  });
-}
+import { useAuth } from "../App-UNIHome-Complete-Fixed.jsx";
 
 // Design system per UNI Home Auth
 const authTheme = {
@@ -254,6 +233,7 @@ export default function UNIHomeAuthPage() {
   const [backendStatus, setBackendStatus] = useState("checking");
   const [focusedInput, setFocusedInput] = useState("");
   const navigate = useNavigate();
+  const auth = useAuth();
 
   // Verifica stato backend
   useEffect(() => {
@@ -319,23 +299,22 @@ export default function UNIHomeAuthPage() {
 
       const response = await axios.post(`http://localhost:5000${endpoint}`, data, {
         timeout: 10000
-      });      // Salva dati utente con la chiave corretta che usa l'app principale
+      });
+
+      // Salva dati utente con tutte le chiavi necessarie
       localStorage.setItem("authToken", response.data.token);
       localStorage.setItem("userData", JSON.stringify(response.data.user));
-      localStorage.setItem("token", response.data.token); // Compatibilità
-      localStorage.setItem("userId", response.data.userId); // Compatibilità
-      localStorage.setItem("user", JSON.stringify(response.data.user)); // Compatibilità
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
       
       setSuccess(form === "login" ? "Login effettuato con successo!" : "Registrazione completata!");
       
-      // Usa il context di autenticazione se disponibile
-      const auth = useAuth();
+      // Usa il context di autenticazione
       if (auth && auth.login) {
         auth.login(response.data.user, response.data.token);
       }
       
       setTimeout(() => {
-        // Reindirizza direttamente alla dashboard per utenti autenticati
         navigate("/dashboard");
       }, 1500);
 

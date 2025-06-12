@@ -109,9 +109,8 @@ app.get('/api/info', async (req, res) => {
         messages: '/api/messages'
       }
     });
-  } catch (error) {
-    res.status(500).json({
-      appName: 'FuoriSede/UniHomes',
+  } catch (error) {    res.status(500).json({
+      appName: 'UNI Home',
       status: 'error',
       database: 'disconnected',
       error: error.message
@@ -172,10 +171,9 @@ async function startServer() {
       await sequelize.sync({ alter: true });
       console.log('✅ Modelli database sincronizzati');
     }
-    
-    // Avvia server
+      // Avvia server
     app.listen(PORT, () => {
-      console.log('\n🚀 Server FuoriSede/UniHomes avviato!');
+      console.log('\n🏠 UNI Home Server avviato con successo!');
       console.log(`📡 Server in ascolto su porta ${PORT}`);
       console.log(`🌐 Base URL: http://localhost:${PORT}`);
       console.log(`📋 Info API: http://localhost:${PORT}/api/info`);
@@ -185,7 +183,7 @@ async function startServer() {
       console.log('   Annunci: /api/announcements');
       console.log('   Profilo: /api/profile');
       console.log('   Messaggi: /api/messages');
-      console.log('\n✨ Server pronto per le richieste!');
+      console.log('\n✨ UNI Home Server pronto per le richieste!');
     });
     
   } catch (error) {

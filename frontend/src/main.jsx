@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App-Fixed.jsx";
+import App from "./App-UNIHome-Fixed.jsx";
 // import "./index.css"; // Commentato per evitare problemi CSS
 
-console.log("🚀 AlloggiFinder - App Completa con Routing...");
+console.log("🚀 UNI Home - App Completa con Routing Moderno...");
 
 const rootElement = document.getElementById("root");
 console.log("Root element:", rootElement);
@@ -17,17 +17,16 @@ if (rootElement) {
                 <App />
             </React.StrictMode>
         );
-        console.log("✅ AlloggiFinder rendered successfully");
+        console.log("✅ UNI Home rendered successfully");
     } catch (error) {
         console.error("❌ Error rendering app:", error);
         // Fallback di emergenza
-        rootElement.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-family: Arial, sans-serif; text-align: center;">
+        rootElement.innerHTML = `            <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); color: white; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; text-align: center;">
                 <div>
-                    <h1>🚨 Errore di Rendering</h1>
+                    <h1>🏠 UNI Home - Errore di Rendering</h1>
                     <p>Errore: ${error.message}</p>
-                    <button onclick="location.reload()" style="padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; background: #ff4444; color: white; cursor: pointer;">
-                        Ricarica
+                    <button onclick="location.reload()" style="padding: 12px 24px; margin: 10px; border: none; border-radius: 8px; background: #6366f1; color: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                        Ricarica App
                     </button>
                 </div>
             </div>

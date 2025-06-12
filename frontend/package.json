@@ -1,7 +1,8 @@
 {
-  "name": "frontend",
+  "name": "uni-home-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "UNI Home - Piattaforma Moderna per Alloggi Universitari",
   "type": "module",
   "scripts": {
     "dev": "vite",

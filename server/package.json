@@ -1,6 +1,7 @@
 {
-  "name": "unihomes-backend",
+  "name": "uni-home-backend",
   "version": "1.0.0",
+  "description": "UNI Home Backend API - Sistema di Gestione Alloggi Universitari",
   "main": "index.js",
   "scripts": {
     "dev": "node index.js"

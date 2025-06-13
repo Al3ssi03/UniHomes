@@ -1,9 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App-UNIHome-Complete-Fixed.jsx";
+// import TestApp from "./App-Test-Debug.jsx";
 // import "./index.css"; // Commentato per evitare problemi CSS
 
-console.log("🚀 UNI Home - App Completa con Sistema di Autenticazione...");
+console.log("🚀 UNI Home - App Completa con Fix Bug...");
 
 const rootElement = document.getElementById("root");
 console.log("Root element:", rootElement);
@@ -17,7 +18,7 @@ if (rootElement) {
                 <App />
             </React.StrictMode>
         );
-        console.log("✅ UNI Home rendered successfully");
+        console.log("✅ UNI Home App rendered successfully");
     } catch (error) {
         console.error("❌ Error rendering app:", error);
         // Fallback di emergenza

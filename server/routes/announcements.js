@@ -151,6 +151,48 @@ router.post('/', requireAuth, upload.array('immagini', 5), async (req, res) => {
   }
 });
 
+// POST - Route temporanea per annunci senza immagini (JSON)
+router.post('/simple', requireAuth, async (req, res) => {
+  try {
+    const { titolo, descrizione, prezzo, città, indirizzo, lat, lng } = req.body;
+    
+    // Validation
+    if (!titolo || !prezzo || !città) {
+      return res.status(400).json({ 
+        message: 'Titolo, prezzo e città sono obbligatori' 
+      });
+    }
+    
+    const newAnnouncement = await Announcement.create({
+      titolo,
+      descrizione,
+      prezzo: parseFloat(prezzo),
+      città,
+      indirizzo,
+      immagini: [], // Nessuna immagine
+      lat: lat ? parseFloat(lat) : null,
+      lng: lng ? parseFloat(lng) : null,
+      userId: req.userId
+    });
+    
+    // Recupera l'annuncio con i dati dell'utente
+    const announcementWithUser = await Announcement.findByPk(newAnnouncement.id, {
+      include: [{
+        model: User,
+        attributes: ['id', 'nome', 'cognome', 'username']
+      }]
+    });
+    
+    res.status(201).json({
+      message: 'Annuncio creato con successo',
+      announcement: announcementWithUser
+    });
+  } catch (error) {
+    console.error('Errore creazione annuncio:', error);
+    res.status(500).json({ message: 'Errore durante la creazione dell\'annuncio' });
+  }
+});
+
 // PUT - Modifica annuncio (solo proprietario)
 router.put('/:id', requireAuth, upload.array('nuove_immagini', 5), async (req, res) => {
   try {

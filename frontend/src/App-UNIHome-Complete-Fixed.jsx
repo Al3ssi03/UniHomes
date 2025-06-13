@@ -477,6 +477,7 @@ const Dashboard = () => {
 const ListingsPage = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchListings();
@@ -484,19 +485,22 @@ const ListingsPage = () => {
 
   const fetchListings = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:5000/api/announcements', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      setError('');
+      // Rimuoviamo l'autenticazione obbligatoria per la ricerca pubblica
+      const response = await fetch('http://localhost:5000/api/announcements');
       
       if (response.ok) {
         const data = await response.json();
-        setListings(data);
+        console.log('Dati ricevuti:', data); // Debug
+        // Controlla se i dati sono nell'oggetto announcements
+        const announcementsArray = data.announcements || data;
+        setListings(Array.isArray(announcementsArray) ? announcementsArray : []);
+      } else {
+        setError(`Errore server: ${response.status}`);
       }
     } catch (error) {
       console.error('Errore caricamento annunci:', error);
+      setError('Errore di connessione al server');
     } finally {
       setLoading(false);
     }
@@ -506,6 +510,21 @@ const ListingsPage = () => {
     return (
       <div style={styles.pageContent}>
         <h1 style={styles.pageTitle}>🔍 Caricamento annunci...</h1>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={styles.pageContent}>
+        <h1 style={styles.pageTitle}>🔍 Cerca la Tua Casa</h1>
+        <div style={styles.card}>
+          <h3>❌ Errore</h3>
+          <p>{error}</p>
+          <button style={styles.button} onClick={fetchListings}>
+            🔄 Riprova
+          </button>
+        </div>
       </div>
     );
   }
@@ -549,7 +568,7 @@ const PublishPage = () => {
     prezzo: '',
     città: '',
     indirizzo: ''
-  });
+  });  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -558,27 +577,85 @@ const PublishPage = () => {
     
     try {
       const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        alert('❌ Non sei autenticato. Effettua il login prima.');
+        return;
+      }
+      
+      // Valida i dati del form
+      if (!formData.titolo || !formData.prezzo || !formData.città) {
+        alert('❌ Compila tutti i campi obbligatori: titolo, prezzo e città');
+        return;
+      }
+      
+      // Crea FormData per includere le immagini
+      const formDataToSend = new FormData();
+      formDataToSend.append('titolo', formData.titolo);
+      formDataToSend.append('descrizione', formData.descrizione);
+      formDataToSend.append('prezzo', formData.prezzo);
+      formDataToSend.append('città', formData.città);
+      formDataToSend.append('indirizzo', formData.indirizzo);
+      
+      // Aggiungi le immagini
+      images.forEach((image, index) => {
+        formDataToSend.append('immagini', image);
+      });
+      
+      console.log('Invio annuncio...', formData); // Debug
+      
       const response = await fetch('http://localhost:5000/api/announcements', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
+          // Non specificare Content-Type per FormData
         },
-        body: JSON.stringify(formData)
+        body: formDataToSend
       });
 
       if (response.ok) {
         alert('✅ Annuncio pubblicato con successo!');
-        navigate('/dashboard');
+        // Reset del form
+        setFormData({
+          titolo: '',
+          descrizione: '',
+          prezzo: '',
+          città: '',
+          indirizzo: ''
+        });
+        setImages([]);
+        navigate('/listings');
       } else {
-        alert('❌ Errore nella pubblicazione dell\'annuncio');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Errore server:', response.status, errorData);
+        alert(`❌ Errore ${response.status}: ${errorData.message || 'Errore nella pubblicazione dell\'annuncio'}`);
       }
     } catch (error) {
       console.error('Errore:', error);
-      alert('❌ Errore di connessione');
+      alert(`❌ Errore di connessione: ${error.message}`);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Limita a massimo 5 immagini
+    if (files.length > 5) {
+      alert('Massimo 5 immagini consentite');
+      return;
+    }
+    
+    // Verifica dimensione file (5MB max)
+    for (let file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Dimensione file troppo grande. Max 5MB per immagine.');
+        return;
+      }
+    }
+    
+    setImages(files);
   };
 
   const inputStyle = {
@@ -641,16 +718,129 @@ const PublishPage = () => {
             style={inputStyle}
             required
           />
-        </div>
-
-        <input
+        </div>        <input
           type="text"
           placeholder="Indirizzo"
           value={formData.indirizzo}
           onChange={(e) => setFormData({...formData, indirizzo: e.target.value})}
           style={inputStyle}
           required
-        />
+        />        {/* Campo per upload immagini */}
+        <div style={{marginBottom: '15px'}}>
+          <label style={{
+            display: 'block',
+            color: theme.colors.white,
+            marginBottom: '8px',
+            fontSize: '14px',
+            fontWeight: '600'
+          }}>
+            📷 Immagini Annuncio (max 5, 5MB ciascuna)
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            onChange={handleImageChange}
+            style={{
+              ...inputStyle,
+              padding: '10px',
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+              border: '2px dashed rgba(255, 255, 255, 0.3)'
+            }}
+          />
+          {images.length > 0 && (
+            <div style={{
+              marginTop: '15px',
+              color: theme.colors.white,
+              fontSize: '14px'
+            }}>
+              ✅ {images.length} immagine{images.length > 1 ? 'i' : ''} selezionate
+              
+              {/* Anteprime delle immagini */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                gap: '10px',
+                marginTop: '10px',
+                maxHeight: '200px',
+                overflowY: 'auto'
+              }}>
+                {Array.from(images).map((file, index) => {
+                  const objectURL = URL.createObjectURL(file);
+                  return (
+                    <div key={index} style={{
+                      position: 'relative',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      border: '2px solid rgba(255, 255, 255, 0.3)'
+                    }}>
+                      <img 
+                        src={objectURL}
+                        alt={`Anteprima ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '80px',
+                          objectFit: 'cover'
+                        }}
+                        onLoad={() => URL.revokeObjectURL(objectURL)}
+                      />
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '2px',
+                        left: '2px',
+                        right: '2px',
+                        background: 'rgba(0, 0, 0, 0.7)',
+                        color: 'white',
+                        fontSize: '10px',
+                        padding: '2px 4px',
+                        borderRadius: '4px',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {file.name}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newImages = Array.from(images).filter((_, i) => i !== index);
+                          setImages(newImages);
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: '2px',
+                          right: '2px',
+                          background: 'rgba(255, 0, 0, 0.8)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '20px',
+                          height: '20px',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                        title="Rimuovi immagine"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div style={{
+                marginTop: '8px',
+                fontSize: '12px',
+                opacity: 0.8
+              }}>
+                💡 Clicca sulla × per rimuovere un'immagine
+              </div>
+            </div>
+          )}
+        </div>
 
         <button
           type="submit"
@@ -767,12 +957,7 @@ export default function UNIHomeApp() {
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
-            } />
-            <Route path="/listings" element={
-              <ProtectedRoute>
-                <ListingsPage />
-              </ProtectedRoute>
-            } />
+            } />            <Route path="/listings" element={<ListingsPage />} />
             <Route path="/publish" element={
               <ProtectedRoute>
                 <PublishPage />

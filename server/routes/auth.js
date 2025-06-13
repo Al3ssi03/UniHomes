@@ -7,17 +7,34 @@ const router = express.Router();
 // REGISTRAZIONE
 router.post('/register', async (req, res) => {
   try {
-    const { username, password, nome, cognome, anno_nascita, telefono } = req.body;
+    const { username, email, password, nome, cognome, anno_nascita, telefono, confirmPassword } = req.body;
 
-    const existingUser = await User.findOne({ where: { username } });
+    // Validazione base
+    if (!password || password !== confirmPassword) {
+      return res.status(400).json({ message: 'Le password non coincidono' });
+    }
+
+    if (!username && !email) {
+      return res.status(400).json({ message: 'Username o email richiesti' });
+    }
+
+    // Controlla se username o email già esistono
+    const existingUser = await User.findOne({ 
+      where: {
+        ...(username && { username }),
+        ...(email && { email })
+      }
+    });
+    
     if (existingUser) {
-      return res.status(400).json({ message: 'Username già in uso' });
+      return res.status(400).json({ message: 'Username o email già in uso' });
     }
 
     const password_hash = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
-      username,
+      username: username || email,
+      email: email || null,
       password_hash,
       nome,
       cognome,
@@ -39,6 +56,7 @@ router.post('/register', async (req, res) => {
       user: {
         id: newUser.id,
         username: newUser.username,
+        email: newUser.email,
         nome: newUser.nome,
         cognome: newUser.cognome
       }
@@ -52,9 +70,21 @@ router.post('/register', async (req, res) => {
 // LOGIN
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, username, password } = req.body;
+    const loginField = email || username;
 
-    const user = await User.findOne({ where: { username } });
+    if (!loginField) {
+      return res.status(400).json({ message: 'Email o username richiesti' });
+    }    // Cerca per email o username
+    const user = await User.findOne({ 
+      where: {
+        [require('sequelize').Op.or]: [
+          { email: loginField },
+          { username: loginField }
+        ]
+      }
+    });
+    
     if (!user) return res.status(401).json({ message: 'Credenziali non valide' });
 
     const match = await bcrypt.compare(password, user.password_hash);
@@ -74,6 +104,7 @@ router.post('/login', async (req, res) => {
       user: {
         id: user.id,
         username: user.username,
+        email: user.email,
         nome: user.nome,
         cognome: user.cognome
       }

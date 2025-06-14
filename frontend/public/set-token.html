@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Auth Token - UNI Home Debug</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .result { 
+            margin: 10px 0; 
+            padding: 15px; 
+            background: #f9f9f9; 
+            border-radius: 5px;
+            border-left: 4px solid #ccc;
+        }
+        .success { 
+            background: #e8f5e8; 
+            color: #2e7d32; 
+            border-left-color: #4caf50;
+        }
+        button { 
+            margin: 5px; 
+            padding: 12px 24px; 
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #2196f3;
+            color: white;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Set Auth Token - Debug UNI Home</h1>
+        
+        <h2>🎫 Imposta Token di Autenticazione</h2>
+        <button onclick="setValidToken()">Imposta Token Valido (Test User)</button>
+        <div id="token-result" class="result">In attesa...</div>
+        
+        <h2>📋 Token Personalizzato</h2>
+        <input type="text" id="custom-token" placeholder="Inserisci token JWT personalizzato...">
+        <button onclick="setCustomToken()">Imposta Token Personalizzato</button>
+        
+        <h2>🧪 Verifica Stato Autenticazione</h2>
+        <button onclick="checkAuth()">Verifica Token Corrente</button>
+        <button onclick="clearAuth()">Rimuovi Autenticazione</button>
+        <div id="auth-result" class="result">Clicca "Verifica Token Corrente" per vedere lo stato</div>
+        
+        <h2>🔗 Test Links</h2>
+        <a href="http://localhost:5175/#/" target="_blank">🏠 Home</a> | 
+        <a href="http://localhost:5175/#/publish" target="_blank">📝 Pubblica</a> | 
+        <a href="http://localhost:5175/#/listings" target="_blank">🔍 Cerca</a> | 
+        <a href="http://localhost:5175/#/auth" target="_blank">🔐 Login</a>
+    </div>
+
+    <script>
+        function setValidToken() {
+            const validToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NDk4MjA0NzN9.U5nSRYpGJmGVe8gUo3k2YW-dcFIqQvsh9J1BsrJUxYc';
+            
+            const userData = {
+                id: 1,
+                username: 'mario.rossi',
+                nome: 'Mario',
+                cognome: 'Rossi'
+            };
+            
+            localStorage.setItem('authToken', validToken);
+            localStorage.setItem('userData', JSON.stringify(userData));
+            
+            document.getElementById('token-result').innerHTML = `
+                ✅ <strong>Token impostato con successo!</strong><br>
+                • User ID: 1<br>
+                • Username: mario.rossi<br>
+                • Nome: Mario Rossi<br>
+                • Token: ${validToken.substring(0, 30)}...<br>
+                <br>
+                🎯 Ora puoi andare alla <a href="http://localhost:5175/#/publish" target="_blank">pagina di pubblicazione</a>
+            `;
+            document.getElementById('token-result').className = 'result success';
+        }
+        
+        function setCustomToken() {
+            const customToken = document.getElementById('custom-token').value;
+            if (!customToken.trim()) {
+                alert('Inserisci un token valido');
+                return;
+            }
+            
+            localStorage.setItem('authToken', customToken);
+            
+            document.getElementById('token-result').innerHTML = `
+                ✅ <strong>Token personalizzato impostato!</strong><br>
+                • Token: ${customToken.substring(0, 30)}...<br>
+                <br>
+                ⚠️ Nota: Verifica che il token sia valido per evitare errori
+            `;
+            document.getElementById('token-result').className = 'result success';
+        }
+        
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            const userData = localStorage.getItem('userData');
+            
+            if (token) {
+                let userInfo = 'Non disponibile';
+                if (userData) {
+                    try {
+                        const user = JSON.parse(userData);
+                        userInfo = `${user.nome} ${user.cognome} (${user.username})`;
+                    } catch (e) {
+                        userInfo = 'Errore parsing userData';
+                    }
+                }
+                
+                document.getElementById('auth-result').innerHTML = `
+                    ✅ <strong>Utente Autenticato</strong><br>
+                    • Utente: ${userInfo}<br>
+                    • Token: ${token.substring(0, 30)}...<br>
+                    • Data token: ${localStorage.getItem('authTokenDate') || 'Non disponibile'}
+                `;
+                document.getElementById('auth-result').className = 'result success';
+            } else {
+                document.getElementById('auth-result').innerHTML = `
+                    ❌ <strong>Nessuna Autenticazione</strong><br>
+                    • Nessun token trovato nel localStorage<br>
+                    • Effettua il login o imposta un token di test
+                `;
+                document.getElementById('auth-result').className = 'result';
+            }
+        }
+        
+        function clearAuth() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            
+            document.getElementById('auth-result').innerHTML = `
+                🗑️ <strong>Autenticazione Rimossa</strong><br>
+                • Token rimosso dal localStorage<br>
+                • Utente disconnesso
+            `;
+            document.getElementById('auth-result').className = 'result';
+        }
+        
+        // Auto-check auth on load
+        checkAuth();
+    </script>
+</body>
+</html>

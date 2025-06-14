@@ -601,8 +601,13 @@ const PublishPage = () => {
       images.forEach((image, index) => {
         formDataToSend.append('immagini', image);
       });
+        console.log('Invio annuncio...', formData); // Debug
       
-      console.log('Invio annuncio...', formData); // Debug
+      // Debug: Verifica il contenuto del FormData
+      console.log('FormData contents:');
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(key, ':', value);
+      }
       
       const response = await fetch('http://localhost:5000/api/announcements', {
         method: 'POST',

@@ -111,8 +111,25 @@ router.post('/', requireAuth, upload.array('immagini', 5), async (req, res) => {
   try {
     const { titolo, descrizione, prezzo, città, indirizzo, lat, lng } = req.body;
     
+    // Debug logging
+    console.log('🧪 POST /api/announcements - Debug Info:');
+    console.log('👤 User ID:', req.userId);
+    console.log('📋 Body received:', req.body);
+    console.log('📎 Files received:', req.files ? req.files.length : 0);
+    console.log('🔍 Field values:');
+    console.log('  - titolo:', `"${titolo}"`);
+    console.log('  - prezzo:', `"${prezzo}"`);
+    console.log('  - città:', `"${città}"`);
+    console.log('  - descrizione:', `"${descrizione}"`);
+    console.log('  - indirizzo:', `"${indirizzo}"`);
+    
     // Validation
     if (!titolo || !prezzo || !città) {
+      console.log('❌ Validation failed:');
+      console.log('  - titolo empty:', !titolo);
+      console.log('  - prezzo empty:', !prezzo);  
+      console.log('  - città empty:', !città);
+      
       return res.status(400).json({ 
         message: 'Titolo, prezzo e città sono obbligatori' 
       });

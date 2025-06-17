@@ -4,9 +4,8 @@ const User = require('./user');
 
 const Announcement = sequelize.define('Announcement', {
   titolo: { type: DataTypes.STRING, allowNull: false },
-  descrizione: DataTypes.TEXT,
-  prezzo: { type: DataTypes.DECIMAL, allowNull: false },
-  città: DataTypes.STRING,
+  descrizione: DataTypes.TEXT,  prezzo: { type: DataTypes.DECIMAL, allowNull: false },
+  citta: DataTypes.STRING,
   indirizzo: DataTypes.STRING,
   immagini: DataTypes.JSON, // Array di URL (una o più immagini)
   lat: DataTypes.FLOAT,

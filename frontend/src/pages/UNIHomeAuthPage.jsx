@@ -244,6 +244,7 @@ export default function UNIHomeAuthPage() {
   const [form, setForm] = useState("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [nome, setNome] = useState("");
   const [cognome, setCognome] = useState("");
   const [annoNascita, setAnnoNascita] = useState("");
@@ -282,6 +283,10 @@ export default function UNIHomeAuthPage() {
       return false;
     }
     if (form === "register") {
+      if (password !== confirmPassword) {
+        setError("Le password non coincidono");
+        return false;
+      }
       if (!nome.trim() || !cognome.trim()) {
         setError("Nome e cognome sono obbligatori");
         return false;
@@ -315,7 +320,15 @@ export default function UNIHomeAuthPage() {
       const endpoint = form === "login" ? "/api/auth/login" : "/api/auth/register";
       const data = form === "login" 
         ? { username, password }
-        : { username, password, nome, cognome, anno_nascita: parseInt(annoNascita), telefono };
+        : { 
+            username, 
+            password,
+            confirmPassword: password, // Aggiungiamo la conferma password
+            nome, 
+            cognome, 
+            anno_nascita: parseInt(annoNascita), 
+            telefono 
+          };
 
       const response = await axios.post(`http://localhost:5000${endpoint}`, data, {
         timeout: 10000
@@ -443,6 +456,21 @@ export default function UNIHomeAuthPage() {
 
           {form === "register" && (
             <>
+              <div style={authStyles.inputGroup}>
+                <label style={authStyles.label}>Conferma Password</label>
+                <input
+                  type="password"
+                  placeholder="Conferma la tua password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onFocus={() => setFocusedInput("confirmPassword")}
+                  onBlur={() => setFocusedInput("")}
+                  style={getInputStyle("confirmPassword")}
+                  required
+                  disabled={isLoading || backendStatus !== "online"}
+                />
+              </div>
+
               <div style={authStyles.gridCols2}>
                 <div style={authStyles.inputGroup}>
                   <label style={authStyles.label}>Nome</label>

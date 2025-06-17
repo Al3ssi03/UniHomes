@@ -45,8 +45,7 @@ router.get('/', async (req, res) => {
     // Costruisci la query dinamicamente
     const whereClause = {};
     
-    if (citta && citta !== '') {
-      whereClause.città = {
+    if (citta && citta !== '') {      whereClause.citta = {
         [Op.iLike]: `%${citta}%` // Case insensitive search
       };
     }
@@ -109,46 +108,89 @@ router.get('/:id', async (req, res) => {
 // POST - Crea nuovo annuncio
 router.post('/', requireAuth, upload.array('immagini', 5), async (req, res) => {
   try {
-    const { titolo, descrizione, prezzo, città, indirizzo, lat, lng } = req.body;
-    
-    // Debug logging
-    console.log('🧪 POST /api/announcements - Debug Info:');
-    console.log('👤 User ID:', req.userId);
-    console.log('📋 Body received:', req.body);
+    const { titolo, descrizione, prezzo, citta, indirizzo, lat, lng } = req.body;
+      // Debug logging ENHANCED
+    console.log('🚨 EMERGENCY DEBUG - POST /api/announcements:');
+    console.log('👤 User ID from token:', req.userId, '(type:', typeof req.userId, ')');
+    console.log('📋 Raw req.body:', JSON.stringify(req.body, null, 2));
     console.log('📎 Files received:', req.files ? req.files.length : 0);
-    console.log('🔍 Field values:');
-    console.log('  - titolo:', `"${titolo}"`);
-    console.log('  - prezzo:', `"${prezzo}"`);
-    console.log('  - città:', `"${città}"`);
-    console.log('  - descrizione:', `"${descrizione}"`);
-    console.log('  - indirizzo:', `"${indirizzo}"`);
     
-    // Validation
-    if (!titolo || !prezzo || !città) {
-      console.log('❌ Validation failed:');
-      console.log('  - titolo empty:', !titolo);
-      console.log('  - prezzo empty:', !prezzo);  
-      console.log('  - città empty:', !città);
+    // CHECK IF USER EXISTS
+    const userExists = await User.findByPk(req.userId);
+    console.log('👤 USER EXISTENCE CHECK:');
+    console.log('  - userId from token:', req.userId);
+    console.log('  - user exists in DB:', !!userExists);
+    console.log('  - user details:', userExists ? {id: userExists.id, email: userExists.email, nome: userExists.nome} : 'NULL');
+    
+    if (!userExists) {
+      console.log('❌ USER NOT FOUND - FOREIGN KEY WILL FAIL!');
+      return res.status(401).json({ 
+        message: 'Utente non trovato. Effettua nuovamente il login.',
+        debug: { 
+          userId: req.userId,
+          userExists: false
+        }
+      });
+    }
+    
+    // Field by field analysis
+    console.log('🔍 FIELD-BY-FIELD ANALYSIS:');
+    console.log(`  🏷️  titolo: "${titolo}" (type: ${typeof titolo}, length: ${titolo?.length || 0})`);
+    console.log(`  💰 prezzo: "${prezzo}" (type: ${typeof prezzo}, length: ${prezzo?.length || 0})`);
+    console.log(`  🏙️  citta: "${citta}" (type: ${typeof citta}, length: ${citta?.length || 0})`);
+    console.log(`  📝 descrizione: "${descrizione}" (type: ${typeof descrizione}, length: ${descrizione?.length || 0})`);
+    console.log(`  📍 indirizzo: "${indirizzo}" (type: ${typeof indirizzo}, length: ${indirizzo?.length || 0})`);
+    console.log(`  🌐 lat: "${lat}" (type: ${typeof lat})`);
+    console.log(`  🌐 lng: "${lng}" (type: ${typeof lng})`);
+    
+    // Check for undefined/null values
+    console.log('🔍 NULL/UNDEFINED CHECK:');
+    console.log(`  titolo is falsy: ${!titolo}`);
+    console.log(`  prezzo is falsy: ${!prezzo}`);
+    console.log(`  citta is falsy: ${!citta}`);
+    
+    // Validation with detailed logging
+    if (!titolo || !prezzo || !citta) {
+      console.log('❌ VALIDATION FAILED:');
+      console.log('  - titolo empty:', !titolo, `(value: "${titolo}")`);
+      console.log('  - prezzo empty:', !prezzo, `(value: "${prezzo}")`);  
+      console.log('  - citta empty:', !citta, `(value: "${citta}")`);
       
       return res.status(400).json({ 
-        message: 'Titolo, prezzo e città sono obbligatori' 
+        message: 'Titolo, prezzo e città sono obbligatori',
+        debug: {
+          received: { titolo, prezzo, citta, descrizione, indirizzo },
+          validation: {
+            titolo: !titolo,
+            prezzo: !prezzo,
+            citta: !citta
+          }
+        }
       });
     }
     
     // Processa le immagini caricate
     const immaginiPaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
     
-    const newAnnouncement = await Announcement.create({
-      titolo,
-      descrizione,
-      prezzo: parseFloat(prezzo),
-      città,
-      indirizzo,
+    // SAFE DATA PREPARATION
+    const announcementData = {
+      titolo: String(titolo || ''),
+      descrizione: String(descrizione || ''),
+      prezzo: parseFloat(prezzo) || 0,
+      citta: String(citta || ''),
+      indirizzo: String(indirizzo || ''),
       immagini: immaginiPaths,
       lat: lat ? parseFloat(lat) : null,
       lng: lng ? parseFloat(lng) : null,
       userId: req.userId
-    });
+    };
+    
+    console.log('🔧 PREPARED DATA FOR DB:', JSON.stringify(announcementData, null, 2));
+    
+    // TRY CREATING ANNOUNCEMENT
+    console.log('💾 ATTEMPTING TO CREATE ANNOUNCEMENT...');
+    const newAnnouncement = await Announcement.create(announcementData);
+    console.log('✅ ANNOUNCEMENT CREATED SUCCESSFULLY:', newAnnouncement.id);
     
     // Recupera l'annuncio con i dati dell'utente
     const announcementWithUser = await Announcement.findByPk(newAnnouncement.id, {
@@ -172,9 +214,8 @@ router.post('/', requireAuth, upload.array('immagini', 5), async (req, res) => {
 router.post('/simple', requireAuth, async (req, res) => {
   try {
     const { titolo, descrizione, prezzo, città, indirizzo, lat, lng } = req.body;
-    
-    // Validation
-    if (!titolo || !prezzo || !città) {
+      // Validation
+    if (!titolo || !prezzo || !citta) {
       return res.status(400).json({ 
         message: 'Titolo, prezzo e città sono obbligatori' 
       });
@@ -182,9 +223,8 @@ router.post('/simple', requireAuth, async (req, res) => {
     
     const newAnnouncement = await Announcement.create({
       titolo,
-      descrizione,
-      prezzo: parseFloat(prezzo),
-      città,
+      descrizione,      prezzo: parseFloat(prezzo),
+      citta,
       indirizzo,
       immagini: [], // Nessuna immagine
       lat: lat ? parseFloat(lat) : null,

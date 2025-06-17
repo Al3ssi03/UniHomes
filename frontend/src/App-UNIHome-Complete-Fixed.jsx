@@ -2,6 +2,10 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useLocation } from "react-router-dom";
 import UNIHomeAuthPage from './pages/UNIHomeAuthPage-Fixed.jsx';
+import CreateAnnouncementFixed from './components/CreateAnnouncementFixed.jsx';
+import CreateAnnouncementModern from './components/CreateAnnouncementModern.jsx';
+import AnnouncementDetail from './components/AnnouncementDetail.jsx';
+import AnnouncementDetailSimple from './components/AnnouncementDetailSimple.jsx';
 
 // Context per gestire l'autenticazione
 const AuthContext = createContext(null);
@@ -542,15 +546,19 @@ const ListingsPage = () => {
           <h3>📋 Nessun Annuncio Trovato</h3>
           <p>Al momento non ci sono annunci disponibili. Torna più tardi!</p>
         </div>
-      ) : (
-        <div style={styles.grid}>
+      ) : (        <div style={styles.grid}>
           {listings.map((listing) => (
             <div key={listing.id} style={styles.card}>
               <h3>🏠 {listing.titolo}</h3>
               <p><strong>📍</strong> {listing.città}</p>
               <p><strong>💰</strong> €{listing.prezzo}/mese</p>
               <p>{listing.descrizione?.substring(0, 100)}...</p>
-              <button style={styles.button}>Vedi Dettagli</button>
+              <button 
+                style={styles.button}
+                onClick={() => navigate(`/annuncio/${listing.id}`)}
+              >
+                Vedi Dettagli
+              </button>
             </div>
           ))}
         </div>
@@ -946,6 +954,11 @@ const ProfilePage = () => {
   );
 };
 
+// Pagina per pubblicare annunci con componente moderno
+const CreateAnnouncementPage = () => {
+  return <CreateAnnouncementModern />;
+};
+
 // App principale con routing completo
 export default function UNIHomeApp() {
   console.log("🏠 UNI Home - App Completa con Autenticazione FUNZIONANTE");
@@ -963,9 +976,9 @@ export default function UNIHomeApp() {
                 <Dashboard />
               </ProtectedRoute>
             } />            <Route path="/listings" element={<ListingsPage />} />
-            <Route path="/publish" element={
+            <Route path="/annuncio/:id" element={<AnnouncementDetail />} /><Route path="/publish" element={
               <ProtectedRoute>
-                <PublishPage />
+                <CreateAnnouncementPage />
               </ProtectedRoute>
             } />
             <Route path="/messages" element={

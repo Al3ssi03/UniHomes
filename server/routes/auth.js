@@ -7,10 +7,16 @@ const router = express.Router();
 // REGISTRAZIONE
 router.post('/register', async (req, res) => {
   try {
+    console.log('🔍 REGISTRAZIONE - Dati ricevuti:', req.body);
     const { username, email, password, nome, cognome, anno_nascita, telefono, confirmPassword } = req.body;
 
     // Validazione base
-    if (!password || password !== confirmPassword) {
+    if (!password) {
+      return res.status(400).json({ message: 'Password è obbligatoria' });
+    }
+
+    // Se confirmPassword è fornito, deve coincidere con password
+    if (confirmPassword && password !== confirmPassword) {
       return res.status(400).json({ message: 'Le password non coincidono' });
     }
 

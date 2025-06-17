@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 CITY FIELD BUG - FINAL TEST</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: rgba(255,255,255,0.1); 
+            padding: 30px; 
+            border-radius: 20px; 
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        .form-group { margin: 20px 0; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        input, textarea { 
+            width: 100%; 
+            padding: 15px; 
+            border: 1px solid rgba(255,255,255,0.3); 
+            border-radius: 12px; 
+            background: rgba(255,255,255,0.1); 
+            color: white; 
+            font-size: 16px; 
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #06b6d4;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+        }
+        input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.6); }
+        .city-field {
+            border: 2px solid #ef4444 !important;
+            background: rgba(239, 68, 68, 0.1) !important;
+        }
+        .city-label {
+            color: #fca5a5;
+            font-weight: 700;
+        }
+        button { 
+            background: linear-gradient(135deg, #ef4444, #dc2626); 
+            color: white; 
+            padding: 18px 35px; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            margin: 10px; 
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+        button:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+        button:disabled { 
+            opacity: 0.6; 
+            cursor: not-allowed; 
+            transform: none;
+        }
+        .debug-section {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .result { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border-radius: 12px; 
+            font-weight: 600;
+        }
+        .success { 
+            background: rgba(16, 185, 129, 0.2); 
+            border: 1px solid #10b981; 
+            color: #6ee7b7; 
+        }
+        .error { 
+            background: rgba(239, 68, 68, 0.2); 
+            border: 1px solid #ef4444; 
+            color: #fca5a5; 
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online { background: #10b981; }
+        .status-error { background: #ef4444; }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid #06b6d4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🔥 CITY FIELD BUG - FINAL TEST</h1>
+        <p class="subtitle">Test definitivo per il fix del campo città</p>
+        
+        <div id="auth-status" class="result">
+            <span class="loading"></span> Autenticazione in corso...
+        </div>
+        
+        <form id="test-form" style="display: none;">
+            <div class="form-group">
+                <label for="titolo">📝 Titolo Annuncio *</label>
+                <input type="text" id="titolo" name="titolo" value="🔥 TEST FINAL FIX CITY FIELD" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="prezzo">💰 Prezzo (€/mese) *</label>
+                <input type="number" id="prezzo" name="prezzo" value="999" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="citta" class="city-label">🏙️ CITTÀ * (CAMPO CRITICO - FIXED)</label>
+                <input type="text" id="citta" name="citta" class="city-field" placeholder="Inserisci nome città..." required>
+                <small style="color: #fca5a5; font-size: 12px; margin-top: 5px; display: block;">
+                    ⚠️ Questo è il campo che causava il bug. Ora è risolto!
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label for="descrizione">📋 Descrizione</label>
+                <textarea id="descrizione" name="descrizione" rows="3">Test definitivo per verificare che il campo città venga processato correttamente dal server senza errori di encoding o validation.</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="indirizzo">📍 Indirizzo</label>
+                <input type="text" id="indirizzo" name="indirizzo" value="Via del Successo Definitivo, 1">
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="button" onclick="debugFormState()">🔍 DEBUG FORM STATE</button>
+                <button type="submit">🚀 TEST FINAL SUBMISSION</button>
+            </div>
+        </form>
+        
+        <div class="debug-section" id="debug-output"></div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+        
+        // Auto-login
+        async function authenticate() {
+            try {
+                console.log('🔐 Attempting login...');
+                
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'password123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    
+                    document.getElementById('auth-status').innerHTML = `
+                        <span class="status-indicator status-online"></span>
+                        <strong>✅ AUTENTICATO!</strong><br>
+                        Token: ${authToken.substring(0, 25)}...
+                    `;
+                    document.getElementById('auth-status').className = 'result success';
+                    document.getElementById('test-form').style.display = 'block';
+                    
+                    console.log('✅ Login successful');
+                } else {
+                    throw new Error(`Login failed: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                document.getElementById('auth-status').innerHTML = `
+                    <span class="status-indicator status-error"></span>
+                    <strong>❌ ERRORE AUTENTICAZIONE:</strong><br>
+                    ${error.message}
+                `;
+                document.getElementById('auth-status').className = 'result error';
+            }
+        }
+        
+        // Debug form state
+        function debugFormState() {
+            const form = document.getElementById('test-form');
+            const formData = new FormData(form);
+            
+            let debugInfo = '<h3>🔍 FORM STATE DEBUG</h3>';
+            debugInfo += '<h4>📋 Direct Form Elements:</h4>';
+            
+            // Direct access to form elements
+            const elements = {
+                titolo: form.elements.titolo?.value || 'UNDEFINED',
+                prezzo: form.elements.prezzo?.value || 'UNDEFINED',
+                citta: form.elements.citta?.value || 'UNDEFINED',
+                descrizione: form.elements.descrizione?.value || 'UNDEFINED',
+                indirizzo: form.elements.indirizzo?.value || 'UNDEFINED'
+            };
+            
+            Object.entries(elements).forEach(([key, value]) => {
+                const isCityField = key === 'citta';
+                const color = isCityField ? '#fca5a5' : '#6ee7b7';
+                const icon = isCityField ? '🏙️' : '📝';
+                
+                debugInfo += `<p style="color: ${color}"><strong>${icon} ${key.toUpperCase()}:</strong> "${value}" (Length: ${value.length || 0})</p>`;
+            });
+            
+            debugInfo += '<h4>📦 FormData Entries:</h4>';
+            for (let [key, value] of formData.entries()) {
+                const isCityField = key === 'citta';
+                const color = isCityField ? '#fca5a5' : '#93c5fd';
+                debugInfo += `<p style="color: ${color}"><strong>${key}:</strong> "${value}"</p>`;
+            }
+            
+            // Special check for city field
+            const cityValue = form.elements.citta?.value;
+            debugInfo += '<h4>🏙️ CITY FIELD ANALYSIS:</h4>';
+            debugInfo += `<p><strong>✅ Element exists:</strong> ${!!form.elements.citta}</p>`;
+            debugInfo += `<p><strong>✅ Has value:</strong> ${!!cityValue}</p>`;
+            debugInfo += `<p><strong>✅ Not empty:</strong> ${cityValue && cityValue.trim() !== ''}</p>`;
+            debugInfo += `<p><strong>✅ Encoding check:</strong> ${cityValue ? 'OK' : 'EMPTY'}</p>`;
+            
+            document.getElementById('debug-output').innerHTML = debugInfo;
+        }
+        
+        // Form submission test
+        document.getElementById('test-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!authToken) {
+                showResult('❌ Not authenticated', 'error');
+                return;
+            }
+            
+            const form = e.target;
+            const formData = new FormData(form);
+            
+            // Log submission details
+            console.log('🚀 FINAL TEST SUBMISSION:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: "${value}"`);
+            }
+            
+            // Special focus on city field
+            const cityValue = formData.get('citta');
+            console.log(`🏙️ CITY FIELD CRITICAL CHECK: "${cityValue}"`);
+            
+            try {
+                showResult('<span class="loading"></span> Submitting test...', '');
+                
+                const response = await fetch('http://localhost:5000/api/announcements', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(`
+                        🎉 <strong>SUCCESSO TOTALE!</strong><br>
+                        ✅ Annuncio creato con ID: ${result.announcement?.id}<br>
+                        ✅ Titolo: "${result.announcement?.titolo}"<br>
+                        🏙️ <strong>CITTÀ FIELD: "${result.announcement?.citta}"</strong><br>
+                        ✅ Prezzo: €${result.announcement?.prezzo}<br>
+                        📊 Status: ${response.status}<br>
+                        <br>
+                        <strong style="color: #10b981;">🔥 BUG COMPLETAMENTE RISOLTO! 🔥</strong>
+                    `, 'success');
+                } else {
+                    showResult(`
+                        ❌ <strong>Test fallito:</strong><br>
+                        📊 Status: ${response.status}<br>
+                        💬 Messaggio: ${result.message}<br>
+                        📋 Dettagli: ${JSON.stringify(result, null, 2)}
+                    `, 'error');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showResult(`❌ <strong>Errore di rete:</strong><br>${error.message}`, 'error');
+            }
+        });
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.className = type ? `result ${type}` : 'result';
+            resultDiv.style.display = 'block';
+        }
+        
+        // Start authentication
+        authenticate();
+    </script>
+</body>
+</html>

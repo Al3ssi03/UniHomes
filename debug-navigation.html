@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug UniHomes - Test Navigazione</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .button {
+            background: #6366f1;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .button:hover {
+            background: #4f46e5;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        #results {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: rgba(16, 185, 129, 0.3); }
+        .error { background: rgba(239, 68, 68, 0.3); }
+        .info { background: rgba(59, 130, 246, 0.3); }
+    </style>
+</head>
+<body>
+    <h1>🐛 Debug UniHomes - Test Navigazione</h1>
+    
+    <div class="test-section">
+        <h2>📋 Test API Backend</h2>
+        <button class="button" onclick="testBackend()">Test Lista Annunci</button>
+        <button class="button" onclick="testDetailAPI(6)">Test Dettaglio Annuncio #6</button>
+        <div id="api-status" class="status info">Clicca i pulsanti per testare le API</div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Test Navigazione Diretta</h2>
+        <p>Testa i link diretti alle pagine:</p>
+        <a href="http://localhost:5174/" class="button" target="_blank">Homepage</a>
+        <a href="http://localhost:5174/listings" class="button" target="_blank">Lista Annunci</a>
+        <a href="http://localhost:5174/annuncio/6" class="button" target="_blank">Dettaglio #6</a>
+        <a href="http://localhost:5174/annuncio/5" class="button" target="_blank">Dettaglio #5</a>
+        <a href="http://localhost:5174/annuncio/4" class="button" target="_blank">Dettaglio #4</a>
+    </div>
+
+    <div class="test-section">
+        <h2>🏠 Lista Annunci dal Backend</h2>
+        <button class="button" onclick="loadAndDisplayAnnouncements()">Carica e Mostra Annunci</button>
+        <div id="announcements-list"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Simulazione Click Programmatico</h2>
+        <p>Simula il comportamento del pulsante "Vedi Dettagli":</p>
+        <button class="button" onclick="simulateReactNavigation(6)">Simula Navigate a Annuncio #6</button>
+        <button class="button" onclick="simulateReactNavigation(5)">Simula Navigate a Annuncio #5</button>
+        <div id="navigation-status" class="status info">Simulazione non eseguita</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Log di Debug</h2>
+        <button class="button" onclick="clearLog()">Pulisci Log</button>
+        <div id="results">Nessun test eseguito ancora...</div>
+    </div>
+
+    <script>
+        function log(message) {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            results.textContent += `[${timestamp}] ${message}\n`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('results').textContent = 'Log pulito...\n';
+        }
+
+        async function testBackend() {
+            log('🔍 Test backend lista annunci...');
+            const apiStatus = document.getElementById('api-status');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/announcements');
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Backend OK - Trovati ${data.announcements?.length || 0} annunci`);
+                    apiStatus.className = 'status success';
+                    apiStatus.textContent = `✅ Backend funziona! Trovati ${data.announcements?.length || 0} annunci`;
+                    return data;
+                } else {
+                    log(`❌ Errore backend: ${response.status}`);
+                    apiStatus.className = 'status error';
+                    apiStatus.textContent = `❌ Errore backend: ${response.status}`;
+                }
+            } catch (error) {
+                log(`❌ Errore connessione: ${error.message}`);
+                apiStatus.className = 'status error';
+                apiStatus.textContent = `❌ Errore connessione: ${error.message}`;
+            }
+        }
+
+        async function testDetailAPI(id) {
+            log(`🔍 Test dettaglio annuncio #${id}...`);
+            const apiStatus = document.getElementById('api-status');
+            
+            try {
+                const response = await fetch(`http://localhost:5000/api/announcements/${id}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Dettaglio OK - Titolo: ${data.titolo}`);
+                    apiStatus.className = 'status success';
+                    apiStatus.textContent = `✅ Dettaglio funziona! Titolo: ${data.titolo}`;
+                    return data;
+                } else {
+                    log(`❌ Errore dettaglio: ${response.status}`);
+                    apiStatus.className = 'status error';
+                    apiStatus.textContent = `❌ Errore dettaglio: ${response.status}`;
+                }
+            } catch (error) {
+                log(`❌ Errore connessione dettaglio: ${error.message}`);
+                apiStatus.className = 'status error';
+                apiStatus.textContent = `❌ Errore connessione: ${error.message}`;
+            }
+        }
+
+        async function loadAndDisplayAnnouncements() {
+            log('📋 Caricamento annunci per test navigazione...');
+            const container = document.getElementById('announcements-list');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/announcements');
+                if (response.ok) {
+                    const data = await response.json();
+                    const announcements = data.announcements || [];
+                    
+                    let html = '';
+                    announcements.forEach(ann => {
+                        html += `
+                            <div class="card">
+                                <h3>🏠 ${ann.titolo}</h3>
+                                <p><strong>📍</strong> ${ann.citta}</p>
+                                <p><strong>💰</strong> €${ann.prezzo}/mese</p>
+                                <p>${ann.descrizione?.substring(0, 100)}...</p>
+                                <a href="http://localhost:5174/annuncio/${ann.id}" class="button" target="_blank">
+                                    Vedi Dettagli (Link Diretto)
+                                </a>
+                                <button class="button" onclick="simulateReactNavigation(${ann.id})">
+                                    Simula Navigate
+                                </button>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                    log(`✅ Caricati ${announcements.length} annunci`);
+                } else {
+                    log(`❌ Errore caricamento: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ Errore: ${error.message}`);
+            }
+        }
+
+        function simulateReactNavigation(id) {
+            log(`🎯 Simulazione navigazione React a annuncio #${id}...`);
+            const navStatus = document.getElementById('navigation-status');
+            
+            // Simula quello che dovrebbe fare React Router
+            const targetUrl = `http://localhost:5174/annuncio/${id}`;
+            
+            log(`🔗 URL target: ${targetUrl}`);
+            log(`📱 Apertura in nuova finestra per test...`);
+            
+            // Apre in una nuova finestra per testare
+            const newWindow = window.open(targetUrl, '_blank');
+            
+            navStatus.className = 'status success';
+            navStatus.innerHTML = `
+                🎯 Navigazione simulata!<br>
+                📍 URL: <a href="${targetUrl}" target="_blank" style="color: white;">${targetUrl}</a><br>
+                👆 Finestra aperta - controlla se carica correttamente
+            `;
+            
+            log(`✅ Finestra aperta per test navigazione`);
+        }
+
+        // Test automatico all'avvio
+        log('🚀 Debug page caricata - Pronto per i test!');
+        log('📡 Backend: http://localhost:5000');
+        log('🌐 Frontend: http://localhost:5174');
+        
+        // Test automatico del backend all'avvio
+        setTimeout(() => {
+            testBackend();
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -11,12 +11,15 @@ const sequelize = require('./config/db');
 require('./models/user');
 require('./models/announcement');
 require('./models/message');
+require('./models/city');
 
 // Importa routes
 const { router: authRoutes } = require('./routes/auth');
 const announcementsRoutes = require('./routes/announcements');
 const profileRoutes = require('./routes/profile');
 const messagesRoutes = require('./routes/messages');
+const citiesRoutes = require('./routes/cities');
+const geocodingRoutes = require('./routes/geocoding');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -70,11 +73,23 @@ app.use((req, res, next) => {
   next();
 });
 
+// Middleware di logging per debug
+app.use((req, res, next) => {
+  console.log(`🌐 ${req.method} ${req.path}`);
+  if (req.method === 'POST' && req.path.includes('/announcements')) {
+    console.log('📋 Headers:', req.headers);
+    console.log('📋 Content-Type:', req.headers['content-type']);
+  }
+  next();
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/announcements', announcementsRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/cities', citiesRoutes);
+app.use('/api/geocoding', geocodingRoutes);
 
 // Route di test
 app.get('/api/test', (req, res) => {
@@ -161,15 +176,41 @@ app.use((error, req, res, next) => {
 
 // Funzione per avviare il server
 async function startServer() {
-  try {
-    // Test connessione database
+  try {    // Test connessione database
     await sequelize.authenticate();
     console.log('✅ Connessione database stabilita');
     
     // Sincronizza modelli (solo in sviluppo)
     if (process.env.NODE_ENV !== 'production') {
-      await sequelize.sync({ alter: true });
-      console.log('✅ Modelli database sincronizzati');
+      // Use force: true to recreate tables cleanly and avoid constraint issues
+      await sequelize.sync({ force: true });
+      console.log('✅ Modelli database sincronizzati (ricreati)');
+      
+      // Create default test users after clean database
+      const User = require('./models/user');
+      const bcrypt = require('bcryptjs');
+      
+      try {
+        await User.create({
+          username: 'testuser',
+          email: 'test@example.com',
+          password_hash: await bcrypt.hash('password123', 10),
+          nome: 'Test',
+          cognome: 'User'
+        });
+        
+        await User.create({
+          username: 'mario.rossi',
+          email: 'mario@example.com',
+          password_hash: await bcrypt.hash('mario123', 10),
+          nome: 'Mario',
+          cognome: 'Rossi'
+        });
+        
+        console.log('✅ Utenti di test creati');
+      } catch (error) {
+        console.log('⚠️ Utenti di test già esistenti o errore nella creazione');
+      }
     }
       // Avvia server
     app.listen(PORT, () => {

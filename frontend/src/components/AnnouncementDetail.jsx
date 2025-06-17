@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { showToast } from './ToastContainer';
+
+// Funzione toast semplice
+const showToast = (message, type = 'info') => {
+  if (type === 'success') {
+    alert(`✅ ${message}`);
+  } else if (type === 'error') {
+    alert(`❌ ${message}`);
+  } else if (type === 'warning') {
+    alert(`⚠️ ${message}`);
+  } else {
+    alert(`ℹ️ ${message}`);
+  }
+};
 
 const AnnouncementDetail = () => {
   const { id } = useParams();
@@ -31,9 +43,8 @@ const AnnouncementDetail = () => {
       setLoading(false);
     }
   };
-
   const handleContact = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('authToken');
     if (!token) {
       showToast('Devi effettuare il login per contattare gli utenti', 'warning');
       navigate('/auth');

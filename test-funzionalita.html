@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Funzionalità UniHomes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .button {
+            background: #6366f1;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .button:hover {
+            background: #4f46e5;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: rgba(16, 185, 129, 0.3); }
+        .error { background: rgba(239, 68, 68, 0.3); }
+        .info { background: rgba(59, 130, 246, 0.3); }
+        #results {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏠 Test Funzionalità UniHomes</h1>
+    
+    <div class="test-section">
+        <h2>📋 Test API Annunci</h2>
+        <button class="button" onclick="testAnnouncementsList()">Test Lista Annunci</button>
+        <button class="button" onclick="testAnnouncementDetail(2)">Test Dettaglio Annuncio #2</button>
+        <div id="api-results" class="status info">Clicca i pulsanti per testare le API</div>
+    </div>
+
+    <div class="test-section">
+        <h2>🌐 Test Frontend</h2>
+        <a href="http://localhost:5174/" class="button" target="_blank">Apri Homepage</a>
+        <a href="http://localhost:5174/listings" class="button" target="_blank">Apri Lista Annunci</a>
+        <a href="http://localhost:5174/annuncio/2" class="button" target="_blank">Apri Dettaglio Annuncio #2</a>
+        <a href="http://localhost:5174/publish" class="button" target="_blank">Apri Form Pubblicazione</a>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Simulazione Click "Vedi Dettagli"</h2>
+        <p>Simuliamo il comportamento del pulsante "Vedi Dettagli":</p>
+        <button class="button" onclick="simulateVediDettagli(2)">Simula Click "Vedi Dettagli" per Annuncio #2</button>
+        <div id="navigation-results" class="status info">Risultato simulazione apparirà qui</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Risultati</h2>
+        <div id="results">Nessun test eseguito ancora...</div>
+    </div>
+
+    <script>
+        function log(message) {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            results.textContent += `[${timestamp}] ${message}\n`;
+        }
+
+        async function testAnnouncementsList() {
+            log('🔍 Test lista annunci...');
+            const apiResults = document.getElementById('api-results');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/announcements');
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Lista annunci OK - Trovati ${data.announcements?.length || 0} annunci`);
+                    apiResults.className = 'status success';
+                    apiResults.textContent = `✅ API Lista funzionante! Trovati ${data.announcements?.length || 0} annunci`;
+                } else {
+                    log(`❌ Errore lista annunci: ${response.status}`);
+                    apiResults.className = 'status error';
+                    apiResults.textContent = `❌ Errore API Lista: ${response.status}`;
+                }
+            } catch (error) {
+                log(`❌ Errore connessione lista: ${error.message}`);
+                apiResults.className = 'status error';
+                apiResults.textContent = `❌ Errore connessione: ${error.message}`;
+            }
+        }
+
+        async function testAnnouncementDetail(id) {
+            log(`🔍 Test dettaglio annuncio #${id}...`);
+            const apiResults = document.getElementById('api-results');
+            
+            try {
+                const response = await fetch(`http://localhost:5000/api/announcements/${id}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Dettaglio annuncio OK - Titolo: ${data.titolo}`);
+                    apiResults.className = 'status success';
+                    apiResults.textContent = `✅ API Dettaglio funzionante! Titolo: ${data.titolo}`;
+                } else {
+                    log(`❌ Errore dettaglio annuncio: ${response.status}`);
+                    apiResults.className = 'status error';
+                    apiResults.textContent = `❌ Errore API Dettaglio: ${response.status}`;
+                }
+            } catch (error) {
+                log(`❌ Errore connessione dettaglio: ${error.message}`);
+                apiResults.className = 'status error';
+                apiResults.textContent = `❌ Errore connessione: ${error.message}`;
+            }
+        }
+
+        function simulateVediDettagli(id) {
+            log(`🎯 Simulazione click "Vedi Dettagli" per annuncio #${id}...`);
+            const navResults = document.getElementById('navigation-results');
+            
+            // Simula la navigazione che dovrebbe fare React Router
+            const targetUrl = `http://localhost:5174/annuncio/${id}`;
+            
+            log(`🔗 URL di destinazione: ${targetUrl}`);
+            navResults.className = 'status success';
+            navResults.innerHTML = `
+                🎯 Simulazione completata!<br>
+                📍 URL target: <a href="${targetUrl}" target="_blank" style="color: white;">${targetUrl}</a><br>
+                👆 Clicca il link per aprire la pagina dettagli
+            `;
+            
+            // Apre automaticamente la pagina
+            setTimeout(() => {
+                window.open(targetUrl, '_blank');
+                log(`✅ Pagina dettagli aperta in una nuova scheda`);
+            }, 1000);
+        }
+
+        // Test automatico all'avvio
+        log('🚀 Test page caricata - Pronto per i test!');
+        log('📡 Server backend: http://localhost:5000');
+        log('🌐 Server frontend: http://localhost:5174');
+    </script>
+</body>
+</html>

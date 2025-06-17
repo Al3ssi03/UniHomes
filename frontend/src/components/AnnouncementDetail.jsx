@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import LocationMap from './LocationMap';
 
 // Funzione toast semplice
 const showToast = (message, type = 'info') => {
@@ -217,9 +218,8 @@ const AnnouncementDetail = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-3xl font-bold text-blue-600">
                     {formatPrice(announcement.prezzo)}/mese
-                  </div>
-                  <div className="text-gray-600 flex items-center gap-1">
-                    📍 {announcement.città}
+                  </div>                  <div className="text-gray-600 flex items-center gap-1">
+                    📍 {announcement.citta || announcement.città}
                   </div>
                 </div>
 
@@ -287,11 +287,21 @@ const AnnouncementDetail = () => {
                   className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   ← Indietro
-                </button>
-              </div>
-            </div>
+                </button>            </div>
           </div>
         </div>
+
+        {/* Location Map */}
+        {announcement.citta && (
+          <div className="mt-8">
+            <LocationMap 
+              cityName={announcement.citta}
+              address={announcement.indirizzo}
+              region={announcement.regione}
+            />
+          </div>
+        )}
+      </div>
       </div>
     </div>
   );

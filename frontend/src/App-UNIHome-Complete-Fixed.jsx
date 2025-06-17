@@ -550,7 +550,7 @@ const ListingsPage = () => {
           {listings.map((listing) => (
             <div key={listing.id} style={styles.card}>
               <h3>🏠 {listing.titolo}</h3>
-              <p><strong>📍</strong> {listing.città}</p>
+              <p><strong>📍</strong> {listing.citta || listing.città}</p>
               <p><strong>💰</strong> €{listing.prezzo}/mese</p>
               <p>{listing.descrizione?.substring(0, 100)}...</p>
               <button 

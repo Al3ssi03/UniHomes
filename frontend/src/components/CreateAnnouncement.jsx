@@ -9,9 +9,7 @@ const CreateAnnouncement = () => {
     descrizione: '',
     prezzo: '',
     citta: '',
-    indirizzo: '',
-    lat: '',
-    lng: ''
+    indirizzo: ''
   });
 
   // Debug: Log initial state and any changes
@@ -122,14 +120,11 @@ const CreateAnnouncement = () => {
       setShowAddressDropdown(false);
     }
   };
-
   // Selezione di un indirizzo dal dropdown
   const handleAddressSelect = (address) => {
     setFormData(prev => ({
       ...prev,
-      indirizzo: address.display_name,
-      lat: address.latitude,
-      lng: address.longitude
+      indirizzo: address.display_name
     }));
     setShowAddressDropdown(false);
   };
@@ -163,15 +158,12 @@ const CreateAnnouncement = () => {
     // EMERGENCY FIX: Get values directly from form elements
     const form = e.target;
     const formElements = form.elements;
-    
-    const directFormData = {
+      const directFormData = {
       titolo: formElements.titolo?.value || '',
       descrizione: formElements.descrizione?.value || '',
       prezzo: formElements.prezzo?.value || '',
       citta: formElements.citta?.value || '',
-      indirizzo: formElements.indirizzo?.value || '',
-      lat: formElements.lat?.value || '',
-      lng: formElements.lng?.value || ''
+      indirizzo: formElements.indirizzo?.value || ''
     };
     
     console.log('🚨 EMERGENCY DEBUG - Direct form elements:');
@@ -181,16 +173,13 @@ const CreateAnnouncement = () => {
     console.log('  - From form element:', formElements.citta?.value);
     console.log('  - From React state:', formData.citta);
     console.log('  - Input element exists:', !!formElements.citta);
-    
-    // Use direct form data if React state is corrupted
+      // Use direct form data if React state is corrupted
     const finalFormData = {
       titolo: directFormData.titolo || formData.titolo,
       descrizione: directFormData.descrizione || formData.descrizione,
       prezzo: directFormData.prezzo || formData.prezzo,
       citta: directFormData.citta || formData.citta,
-      indirizzo: directFormData.indirizzo || formData.indirizzo,
-      lat: directFormData.lat || formData.lat,
-      lng: directFormData.lng || formData.lng
+      indirizzo: directFormData.indirizzo || formData.indirizzo
     };
     
     console.log('🔧 FINAL FORM DATA:', finalFormData);
@@ -218,15 +207,12 @@ const CreateAnnouncement = () => {
       
       // Use the corrected final form data
       console.log('🔧 Creating FormData with corrected values...');
-      
-      // EXPLICIT field mapping with guaranteed correct field names
+        // EXPLICIT field mapping with guaranteed correct field names
       formDataToSend.append('titolo', finalFormData.titolo);
       formDataToSend.append('descrizione', finalFormData.descrizione);
       formDataToSend.append('prezzo', finalFormData.prezzo);
       formDataToSend.append('citta', finalFormData.citta);  // GUARANTEED correct field name
       formDataToSend.append('indirizzo', finalFormData.indirizzo);
-      formDataToSend.append('lat', finalFormData.lat);
-      formDataToSend.append('lng', finalFormData.lng);
       
       // DEBUG: Verify final FormData
       console.log('✅ Final FormData verification:');
@@ -431,7 +417,7 @@ const CreateAnnouncement = () => {
                     type="button"
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     onClick={() => {
-                      setFormData(prev => ({ ...prev, indirizzo: '', lat: '', lng: '' }));
+                      setFormData(prev => ({ ...prev, indirizzo: '' }));
                       setAddresses([]);
                     }}
                   >
@@ -443,40 +429,7 @@ const CreateAnnouncement = () => {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
                   </div>
                 )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Latitudine (opzionale)
-                </label>
-                <input
-                  type="number"
-                  name="lat"
-                  value={formData.lat}
-                  onChange={handleInputChange}
-                  step="any"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="45.4642"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Longitudine (opzionale)
-                </label>
-                <input
-                  type="number"
-                  name="lng"
-                  value={formData.lng}
-                  onChange={handleInputChange}
-                  step="any"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="9.1900"
-                />
-              </div>
-            </div>
+              </div>            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

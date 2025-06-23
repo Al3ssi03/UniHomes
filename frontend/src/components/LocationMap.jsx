@@ -110,48 +110,67 @@ const LocationMap = ({ cityName, address, region = null }) => {
 
   const nearestUniversities = findNearestUniversities(cityName, region);
 
-  return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-      <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          🗺️ Mappa e Università Vicine
-        </h3>
-        <p className="text-blue-100 text-sm">
-          Posizione dell'alloggio e distanze dalle università
-        </p>
+  return (    <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200">
+      <div className="p-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+        <div className="relative z-10">
+          <h3 className="text-xl font-bold flex items-center gap-3 mb-2">
+            🗺️ Mappa e Università Vicine
+          </h3>
+          <p className="text-blue-100 text-sm font-medium">
+            Posizione dell'alloggio e distanze dalle università più importanti
+          </p>
+        </div>
+        {/* Decorative elements */}
+        <div className="absolute -top-4 -right-4 w-20 h-20 bg-white bg-opacity-10 rounded-full"></div>
+        <div className="absolute -bottom-6 -left-6 w-16 h-16 bg-white bg-opacity-10 rounded-full"></div>
       </div>
-      
-      {/* Map */}
+        {/* Map */}
       <div 
         id={mapId} 
-        style={{ height: '300px', width: '100%' }}
-        className="relative"
+        style={{ height: '400px', width: '100%' }}
+        className="relative border-t border-gray-200"
       >
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-            <p className="text-gray-600 text-sm">Caricamento mappa...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mx-auto mb-3"></div>
+            <p className="text-gray-700 text-sm font-medium">Caricamento mappa interattiva...</p>
+            <p className="text-gray-500 text-xs mt-1">Preparazione visualizzazione università</p>
           </div>
         </div>
-      </div>
-
-      {/* University list */}
+      </div>      {/* University list */}
       {nearestUniversities.length > 0 && (
-        <div className="p-4 border-t">
-          <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+        <div className="p-6 bg-gradient-to-br from-gray-50 to-white border-t border-gray-200">
+          <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-3 text-lg">
             🎓 Università più vicine
+            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+              {nearestUniversities.length} trovate
+            </span>
           </h4>
-          <div className="space-y-3">
+          <div className="grid gap-4">
             {nearestUniversities.map((uni, index) => (
-              <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-800">{uni.name}</div>
-                  <div className="text-sm text-gray-600 mb-1">📍 {uni.city}</div>
-                  <div className="text-sm text-blue-600 font-medium">
-                    📏 Distanza: {uni.distance} km
+              <div key={index} className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
+                <div className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-all">
+                  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-white text-sm font-bold">#{index + 1}</span>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">{uni.description}</div>
+                  <div className="flex-1">
+                    <div className="font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors">
+                      {uni.name}
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                      <span className="flex items-center gap-1">
+                        📍 {uni.city}
+                      </span>
+                      <span className="flex items-center gap-1 font-semibold text-blue-600">
+                        📏 {uni.distance} km
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 leading-relaxed">{uni.description}</div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <div className="w-2 h-2 bg-green-400 rounded-full group-hover:scale-150 transition-transform"></div>
+                  </div>
                 </div>
               </div>
             ))}

@@ -137,22 +137,22 @@ const AnnouncementDetail = () => {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         
-        {/* Navigation */}
-        <div className="mb-6">
+        {/* Navigation with improved style */}
+        <div className="mb-8">
           <button
             onClick={() => navigate('/listings')}
-            className="text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-2"
+            className="group flex items-center gap-3 text-gray-600 hover:text-blue-600 transition-all duration-200 font-medium"
           >
-            ← Torna agli Annunci
+            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+            <span>Torna agli Annunci</span>
           </button>
         </div>
 
-        <div className="glass-card overflow-hidden">
+        <div className="glass-card overflow-hidden shadow-2xl border border-white/20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             
             {/* Galleria Immagini */}
@@ -206,26 +206,27 @@ const AnnouncementDetail = () => {
                   <span className="text-6xl">🏠</span>
                 </div>
               )}
-            </div>
-
-            {/* Dettagli Annuncio */}
-            <div className="p-8">
-              <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-800 mb-4">
+            </div>            {/* Dettagli Annuncio */}
+            <div className="p-8 lg:p-10">
+              <div className="mb-8">
+                <h1 className="text-4xl font-bold text-gray-800 mb-6 leading-tight">
                   {announcement.titolo}
                 </h1>
                 
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-3xl font-bold text-blue-600">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                  <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                     {formatPrice(announcement.prezzo)}/mese
-                  </div>                  <div className="text-gray-600 flex items-center gap-1">
-                    📍 {announcement.citta || announcement.città}
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-4 py-2 rounded-full">
+                    <span className="text-lg">📍</span>
+                    <span className="font-medium">{announcement.citta || announcement.città}</span>
                   </div>
                 </div>
 
                 {announcement.indirizzo && (
-                  <div className="text-gray-600 mb-4">
-                    🏠 {announcement.indirizzo}
+                  <div className="flex items-center gap-2 text-gray-600 bg-blue-50 px-4 py-3 rounded-lg mb-6">
+                    <span className="text-lg">🏠</span>
+                    <span className="font-medium">{announcement.indirizzo}</span>
                   </div>
                 )}
               </div>
@@ -238,26 +239,27 @@ const AnnouncementDetail = () => {
                     {announcement.descrizione}
                   </p>
                 </div>
-              )}
-
-              {/* Informazioni Proprietario */}
+              )}              {/* Informazioni Proprietario */}
               {announcement.User && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Proprietario</h3>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    👤 Proprietario
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
                       {announcement.User.nome ? announcement.User.nome.charAt(0) : '?'}
                     </div>
-                    <div>
-                      <div className="font-semibold text-gray-800">
+                    <div className="flex-1">
+                      <div className="font-bold text-gray-800 text-lg">
                         {announcement.User.nome} {announcement.User.cognome}
                       </div>
-                      <div className="text-gray-600 text-sm">
+                      <div className="text-gray-600 text-sm mb-1">
                         @{announcement.User.username}
                       </div>
                       {announcement.User.telefono && (
-                        <div className="text-gray-600 text-sm">
-                          📞 {announcement.User.telefono}
+                        <div className="flex items-center gap-2 text-gray-600 text-sm">
+                          <span>📞</span>
+                          <span className="font-medium">{announcement.User.telefono}</span>
                         </div>
                       )}
                     </div>
@@ -274,20 +276,19 @@ const AnnouncementDetail = () => {
               </div>
 
               {/* Azioni */}
-              <div className="flex gap-4">
-                <button
+              <div className="flex gap-4">                <button
                   onClick={handleContact}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 font-semibold"
+                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl transition-all duration-200 font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
                 >
                   💬 Contatta Proprietario
                 </button>
                 
                 <button
                   onClick={() => window.history.back()}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold flex items-center justify-center gap-2"
                 >
                   ← Indietro
-                </button>            </div>
+                </button></div>
           </div>
         </div>
 

@@ -479,6 +479,7 @@ const Dashboard = () => {
 
 // Pagina di ricerca annunci
 const ListingsPage = () => {
+  const navigate = useNavigate();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -548,16 +549,110 @@ const ListingsPage = () => {
         </div>
       ) : (        <div style={styles.grid}>
           {listings.map((listing) => (
-            <div key={listing.id} style={styles.card}>
-              <h3>🏠 {listing.titolo}</h3>
-              <p><strong>📍</strong> {listing.citta || listing.città}</p>
-              <p><strong>💰</strong> €{listing.prezzo}/mese</p>
-              <p>{listing.descrizione?.substring(0, 100)}...</p>
+            <div key={listing.id} style={{
+              ...styles.card,
+              background: 'linear-gradient(135deg, white 0%, #f8fafc 100%)',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '24px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-5px)';
+              e.target.style.boxShadow = '0 20px 40px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+            }}>
+              
+              {/* Decorative gradient */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4)'
+              }}></div>
+              
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                marginBottom: '12px',
+                color: '#1f2937',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                🏠 {listing.titolo}
+              </h3>
+              
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '8px',
+                fontSize: '14px'
+              }}>
+                <span style={{
+                  background: '#f3f4f6',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  color: '#6b7280',
+                  fontWeight: '500'
+                }}>
+                  📍 {listing.citta || listing.città}
+                </span>
+                <span style={{
+                  background: 'linear-gradient(135deg, #059669, #10b981)',
+                  color: 'white',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontWeight: 'bold',
+                  fontSize: '16px'
+                }}>
+                  💰 €{listing.prezzo}/mese
+                </span>
+              </div>
+              
+              <p style={{
+                color: '#6b7280',
+                lineHeight: '1.5',
+                marginBottom: '20px',
+                fontSize: '14px'
+              }}>
+                {listing.descrizione?.substring(0, 100)}...
+              </p>
+              
               <button 
-                style={styles.button}
+                style={{
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontSize: '14px',
+                  width: '100%',
+                  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
+                }}
                 onClick={() => navigate(`/annuncio/${listing.id}`)}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 8px 20px rgba(99, 102, 241, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.3)';
+                }}
               >
-                Vedi Dettagli
+                ✨ Vedi Dettagli
               </button>
             </div>
           ))}

@@ -15,16 +15,13 @@ const showToast = (message, type = 'info') => {
 
 const CreateAnnouncementModern = () => {
   const navigate = useNavigate();
-  
-  // STATE SEMPLIFICATO - SOLO VALORI STRINGA
+    // STATE SEMPLIFICATO - SOLO VALORI STRINGA
   const [fields, setFields] = useState({
     titolo: '',
     descrizione: '',
     prezzo: '',
     citta: '',
-    indirizzo: '',
-    lat: '',
-    lng: ''
+    indirizzo: ''
   });
   
   const [images, setImages] = useState([]);
@@ -69,14 +66,11 @@ const CreateAnnouncementModern = () => {
     const formData = new FormData(form);
     
     // ESTRAI VALORI SPECIFICI DAL FORM
-    const directValues = {
-      titolo: form.titolo.value,
+    const directValues = {      titolo: form.titolo.value,
       descrizione: form.descrizione.value,
       prezzo: form.prezzo.value,
       citta: form.citta.value,
-      indirizzo: form.indirizzo.value || '',
-      lat: form.lat?.value || '',
-      lng: form.lng?.value || ''
+      indirizzo: form.indirizzo.value || ''
     };
     
     console.log('🚨 FINAL DEBUG - Direct DOM values:', directValues);
@@ -99,15 +93,12 @@ const CreateAnnouncementModern = () => {
 
       // COSTRUISCI FORM DATA FINALE
       const submitData = new FormData();
-      
-      // USA I VALORI PIÙ SICURI (dal DOM)
+        // USA I VALORI PIÙ SICURI (dal DOM)
       submitData.append('titolo', directValues.titolo);
       submitData.append('descrizione', directValues.descrizione);
       submitData.append('prezzo', directValues.prezzo);
       submitData.append('citta', directValues.citta);
       submitData.append('indirizzo', directValues.indirizzo);
-      submitData.append('lat', directValues.lat);
-      submitData.append('lng', directValues.lng);
       
       // DEBUG: Verifica finale FormData
       console.log('✅ SUBMIT DATA:');
@@ -194,33 +185,33 @@ const CreateAnnouncementModern = () => {
           textAlign: 'center',
           marginBottom: '3rem',
           color: 'white'
-        }}>
-          <div style={{
+        }}>          <div style={{
             fontSize: '4rem',
-            marginBottom: '1rem',
+            marginBottom: '1.5rem',
             animation: 'bounce 2s ease-in-out infinite'
           }}>🏠</div>
           <h1 style={{
-            fontSize: '3rem',
+            fontSize: '3.5rem',
             fontWeight: '800',
-            margin: '0 0 1rem 0',
-            textShadow: '0 4px 6px rgba(0,0,0,0.3)',
+            margin: '0 0 1.5rem 0',
+            textShadow: '0 4px 8px rgba(0,0,0,0.3)',
             background: 'linear-gradient(45deg, #fff, #f0f8ff)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>
-            Pubblica il tuo Annuncio
+            ✨ Pubblica il tuo Annuncio
           </h1>
           <p style={{
-            fontSize: '1.2rem',
-            opacity: 0.9,
-            maxWidth: '600px',
+            fontSize: '1.3rem',
+            opacity: 0.95,
+            maxWidth: '700px',
             margin: '0 auto',
-            lineHeight: '1.6'
+            lineHeight: '1.7',
+            textShadow: '0 2px 4px rgba(0,0,0,0.2)'
           }}>
-            Condividi la tua sistemazione con migliaia di studenti e lavoratori.
-            Il tuo annuncio sarà visibile a tutta la community UNI Home! ✨
+            🎯 Connetti con migliaia di studenti e lavoratori in tutta Italia.
+            Il tuo spazio merita di essere scoperto! 🌟
           </p>
         </div>
 
@@ -430,40 +421,7 @@ const CreateAnnouncementModern = () => {
                 onChange={handleInputChange}
                 className="glass-input"
                 placeholder="Via Roma 123, Zona Universitaria..."
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-              <div className="field-group">
-                <label className="field-label">
-                  🌐 Latitudine (opzionale)
-                </label>
-                <input
-                  type="number"
-                  name="lat"
-                  value={fields.lat}
-                  onChange={handleInputChange}
-                  className="glass-input"
-                  placeholder="41.9028"
-                  step="any"
-                />
-              </div>
-
-              <div className="field-group">
-                <label className="field-label">
-                  🌐 Longitudine (opzionale)
-                </label>
-                <input
-                  type="number"
-                  name="lng"
-                  value={fields.lng}
-                  onChange={handleInputChange}
-                  className="glass-input"
-                  placeholder="12.4964"
-                  step="any"
-                />
-              </div>
-            </div>
+              />            </div>
 
             <div className="field-group">
               <label className="field-label">

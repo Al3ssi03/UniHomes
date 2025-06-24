@@ -4,7 +4,8 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useLocat
 import UNIHomeAuthPage from './pages/UNIHomeAuthPage-Fixed.jsx';
 import CreateAnnouncementFixed from './components/CreateAnnouncementFixed.jsx';
 import CreateAnnouncementModern from './components/CreateAnnouncementModern.jsx';
-import AnnouncementDetail from './components/AnnouncementDetail.jsx';
+import AnnouncementDetailEnhanced from './components/AnnouncementDetailEnhanced.jsx';
+import MessagesPageEnhanced from './components/MessagesPageEnhanced.jsx';
 import AnnouncementDetailSimple from './components/AnnouncementDetailSimple.jsx';
 
 // Context per gestire l'autenticazione
@@ -1071,14 +1072,13 @@ export default function UNIHomeApp() {
                 <Dashboard />
               </ProtectedRoute>
             } />            <Route path="/listings" element={<ListingsPage />} />
-            <Route path="/annuncio/:id" element={<AnnouncementDetail />} /><Route path="/publish" element={
+            <Route path="/annuncio/:id" element={<AnnouncementDetailEnhanced />} /><Route path="/publish" element={
               <ProtectedRoute>
                 <CreateAnnouncementPage />
               </ProtectedRoute>
-            } />
-            <Route path="/messages" element={
+            } />            <Route path="/messages" element={
               <ProtectedRoute>
-                <MessagesPage />
+                <MessagesPageEnhanced />
               </ProtectedRoute>
             } />
             <Route path="/profile" element={

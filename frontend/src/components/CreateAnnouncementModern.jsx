@@ -21,6 +21,7 @@ const CreateAnnouncementModern = () => {
     descrizione: '',
     prezzo: '',
     citta: '',
+    provincia: '',
     indirizzo: ''
   });
   
@@ -70,6 +71,7 @@ const CreateAnnouncementModern = () => {
       descrizione: form.descrizione.value,
       prezzo: form.prezzo.value,
       citta: form.citta.value,
+      provincia: form.provincia.value || '',
       indirizzo: form.indirizzo.value || ''
     };
     
@@ -98,6 +100,7 @@ const CreateAnnouncementModern = () => {
       submitData.append('descrizione', directValues.descrizione);
       submitData.append('prezzo', directValues.prezzo);
       submitData.append('citta', directValues.citta);
+      submitData.append('provincia', directValues.provincia);
       submitData.append('indirizzo', directValues.indirizzo);
       
       // DEBUG: Verifica finale FormData
@@ -410,18 +413,37 @@ const CreateAnnouncementModern = () => {
               </div>
             </div>
 
-            <div className="field-group">
-              <label className="field-label">
-                📍 Indirizzo
-              </label>
-              <input
-                type="text"
-                name="indirizzo"
-                value={fields.indirizzo}
-                onChange={handleInputChange}
-                className="glass-input"
-                placeholder="Via Roma 123, Zona Universitaria..."
-              />            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
+              <div className="field-group">
+                <label className="field-label">
+                  🏛️ Provincia
+                </label>
+                <input
+                  type="text"
+                  name="provincia"
+                  value={fields.provincia}
+                  onChange={handleInputChange}
+                  className="glass-input"
+                  placeholder="RM, MI, NA..."
+                  maxLength="3"
+                  style={{ textTransform: 'uppercase' }}
+                />
+              </div>
+
+              <div className="field-group">
+                <label className="field-label">
+                  📍 Indirizzo
+                </label>
+                <input
+                  type="text"
+                  name="indirizzo"
+                  value={fields.indirizzo}
+                  onChange={handleInputChange}
+                  className="glass-input"
+                  placeholder="Via Roma 123, Zona Universitaria..."
+                />
+              </div>
+            </div>
 
             <div className="field-group">
               <label className="field-label">

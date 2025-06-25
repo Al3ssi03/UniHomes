@@ -93,13 +93,15 @@ const AnnouncementDetailFixed = () => {
       // Normalizza il campo città - supporta diverse varianti dal database
       const city = getCity(data);
       const address = data.indirizzo || data.via || data.address || null;
+      const provincia = data.provincia || null;
       
       console.log('🏙️ Città estratta:', city);
+      console.log('🏛️ Provincia estratta:', provincia);
       console.log('🏠 Indirizzo estratto:', address);
       
       // Prova il geocoding con fallback
       if (city !== 'Città non specificata') {
-        await geocodeWithFallback(address, city);
+        await geocodeWithFallback(address, city, provincia);
       } else {
         console.warn('❌ Nessuna città specificata nell\'annuncio');
         setGeocodingStatus('error');
@@ -116,11 +118,29 @@ const AnnouncementDetailFixed = () => {
     }
   };
 
-  const geocodeWithFallback = async (indirizzo, città) => {
+  const geocodeWithFallback = async (indirizzo, città, provincia) => {
     setGeocodingStatus('loading');
-    console.log(`🗺️ Tentativo geocoding per indirizzo: "${indirizzo}", città: "${città}"`);
+    console.log(`🗺️ Tentativo geocoding per indirizzo: "${indirizzo}", città: "${città}", provincia: "${provincia}"`);
     
-    // Prova 1: Geocoding preciso con indirizzo completo (PRIORITÀ MASSIMA)
+    // Prova 1: Geocoding preciso con indirizzo completo inclusa provincia (PRIORITÀ MASSIMA)
+    if (indirizzo && indirizzo.trim() && città && provincia) {
+      try {
+        const fullAddress = `${indirizzo.trim()}, ${città.trim()}, ${provincia.trim()}, Italia`;
+        console.log(`🌐 Tentativo geocoding ULTRA-PRECISO: "${fullAddress}"`);
+        const coords = await tryGeocoding(fullAddress);
+        if (coords) {
+          setCoordinates(coords);
+          calculateNearbyUniversities(coords);
+          setGeocodingStatus('success');
+          console.log('✅ Geocoding ULTRA-PRECISO riuscito con indirizzo + provincia:', coords);
+          return;
+        }
+      } catch (error) {
+        console.warn('⚠️ Geocoding ultra-preciso fallito:', error);
+      }
+    }
+    
+    // Prova 2: Geocoding preciso con indirizzo completo senza provincia
     if (indirizzo && indirizzo.trim() && città) {
       try {
         const fullAddress = `${indirizzo.trim()}, ${città.trim()}, Italia`;
@@ -138,7 +158,25 @@ const AnnouncementDetailFixed = () => {
       }
     }
 
-    // Prova 2: Geocoding solo con città
+    // Prova 3: Geocoding solo con città e provincia
+    if (città && provincia) {
+      try {
+        const cityAddress = `${città.trim()}, ${provincia.trim()}, Italia`;
+        console.log(`🌐 Tentativo geocoding città + provincia: "${cityAddress}"`);
+        const coords = await tryGeocoding(cityAddress);
+        if (coords) {
+          setCoordinates(coords);
+          calculateNearbyUniversities(coords);
+          setGeocodingStatus('success');
+          console.log('✅ Geocoding riuscito con città + provincia:', coords);
+          return;
+        }
+      } catch (error) {
+        console.warn('⚠️ Geocoding con città + provincia fallito:', error);
+      }
+    }
+
+    // Prova 4: Geocoding solo con città
     if (città) {
       try {
         const cityAddress = `${città.trim()}, Italia`;
@@ -156,7 +194,7 @@ const AnnouncementDetailFixed = () => {
       }
     }
 
-    // Prova 3: Coordinate predefinite per città principali (FALLBACK)
+    // Prova 5: Coordinate predefinite per città principali (FALLBACK)
     const cityKey = città ? città.toLowerCase().trim() : '';
     if (cityCoordinates[cityKey]) {
       const coords = cityCoordinates[cityKey];
@@ -205,11 +243,20 @@ const AnnouncementDetailFixed = () => {
   const getFullAddress = (announcement) => {
     const address = announcement.indirizzo || announcement.via || announcement.address || '';
     const city = getCity(announcement);
+    const provincia = announcement.provincia || '';
     
     if (address && city !== 'Città non specificata') {
-      return `${address}, ${city}`;
+      if (provincia) {
+        return `${address}, ${city}, ${provincia}`;
+      } else {
+        return `${address}, ${city}`;
+      }
     } else if (city !== 'Città non specificata') {
-      return city;
+      if (provincia) {
+        return `${city}, ${provincia}`;
+      } else {
+        return city;
+      }
     } else if (address) {
       return address;
     } else {
@@ -523,6 +570,9 @@ const AnnouncementDetailFixed = () => {
               <div style={{ display: 'grid', gap: '8px' }}>
                 <p><strong>📍 Indirizzo:</strong> {announcement.indirizzo || 'Non specificato'}</p>
                 <p><strong>🏙️ Città:</strong> {getCity(announcement)}</p>
+                {announcement.provincia && (
+                  <p><strong>🏛️ Provincia:</strong> {announcement.provincia}</p>
+                )}
                 <p><strong>📅 Pubblicato:</strong> {formatDate(announcement.data_creazione)}</p>
                 {announcement.tipo_alloggio && (
                   <p><strong>🏡 Tipo:</strong> {announcement.tipo_alloggio}</p>
@@ -569,7 +619,7 @@ const AnnouncementDetailFixed = () => {
                   marginBottom: '15px',
                   fontSize: '14px'
                 }}>
-                  🔍 Ricerca coordinate per: {announcement.indirizzo}, {announcement.città}...
+                  🔍 Ricerca coordinate per: {announcement.indirizzo ? `${announcement.indirizzo}, ` : ''}{getCity(announcement)}{announcement.provincia ? `, ${announcement.provincia}` : ''}...
                 </div>
               )}
 
@@ -633,7 +683,7 @@ const AnnouncementDetailFixed = () => {
                     Indirizzo: {getFullAddress(announcement)}
                   </p>
                   <button 
-                    onClick={() => geocodeWithFallback(announcement.indirizzo, getCity(announcement))}
+                    onClick={() => geocodeWithFallback(announcement.indirizzo, getCity(announcement), announcement.provincia)}
                     style={{
                       background: 'rgba(255, 255, 255, 0.2)',
                       border: 'none',

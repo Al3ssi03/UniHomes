@@ -108,7 +108,7 @@ router.get('/:id', async (req, res) => {
 // POST - Crea nuovo annuncio
 router.post('/', requireAuth, upload.array('immagini', 5), async (req, res) => {
   try {
-    const { titolo, descrizione, prezzo, citta, indirizzo, lat, lng } = req.body;
+    const { titolo, descrizione, prezzo, citta, provincia, indirizzo, lat, lng } = req.body;
       // Debug logging ENHANCED
     console.log('🚨 EMERGENCY DEBUG - POST /api/announcements:');
     console.log('👤 User ID from token:', req.userId, '(type:', typeof req.userId, ')');
@@ -138,6 +138,7 @@ router.post('/', requireAuth, upload.array('immagini', 5), async (req, res) => {
     console.log(`  🏷️  titolo: "${titolo}" (type: ${typeof titolo}, length: ${titolo?.length || 0})`);
     console.log(`  💰 prezzo: "${prezzo}" (type: ${typeof prezzo}, length: ${prezzo?.length || 0})`);
     console.log(`  🏙️  citta: "${citta}" (type: ${typeof citta}, length: ${citta?.length || 0})`);
+    console.log(`  🏛️  provincia: "${provincia}" (type: ${typeof provincia}, length: ${provincia?.length || 0})`);
     console.log(`  📝 descrizione: "${descrizione}" (type: ${typeof descrizione}, length: ${descrizione?.length || 0})`);
     console.log(`  📍 indirizzo: "${indirizzo}" (type: ${typeof indirizzo}, length: ${indirizzo?.length || 0})`);
     console.log(`  🌐 lat: "${lat}" (type: ${typeof lat})`);
@@ -178,6 +179,7 @@ router.post('/', requireAuth, upload.array('immagini', 5), async (req, res) => {
       descrizione: String(descrizione || ''),
       prezzo: parseFloat(prezzo) || 0,
       citta: String(citta || ''),
+      provincia: String(provincia || ''),
       indirizzo: String(indirizzo || ''),
       immagini: immaginiPaths,
       lat: lat ? parseFloat(lat) : null,
@@ -225,6 +227,7 @@ router.post('/simple', requireAuth, async (req, res) => {
       titolo,
       descrizione,      prezzo: parseFloat(prezzo),
       citta,
+      provincia,
       indirizzo,
       immagini: [], // Nessuna immagine
       lat: lat ? parseFloat(lat) : null,
@@ -264,7 +267,7 @@ router.put('/:id', requireAuth, upload.array('nuove_immagini', 5), async (req, r
       return res.status(403).json({ message: 'Non autorizzato a modificare questo annuncio' });
     }
     
-    const { titolo, descrizione, prezzo, città, indirizzo, lat, lng, mantieni_immagini } = req.body;
+    const { titolo, descrizione, prezzo, citta, provincia, indirizzo, lat, lng, mantieni_immagini } = req.body;
     
     // Gestione immagini
     let immaginiAggiornate = [];
@@ -286,7 +289,8 @@ router.put('/:id', requireAuth, upload.array('nuove_immagini', 5), async (req, r
       titolo: titolo || announcement.titolo,
       descrizione: descrizione || announcement.descrizione,
       prezzo: prezzo ? parseFloat(prezzo) : announcement.prezzo,
-      città: città || announcement.città,
+      citta: citta || announcement.citta,
+      provincia: provincia || announcement.provincia,
       indirizzo: indirizzo || announcement.indirizzo,
       immagini: immaginiAggiornate.length > 0 ? immaginiAggiornate : announcement.immagini,
       lat: lat ? parseFloat(lat) : announcement.lat,

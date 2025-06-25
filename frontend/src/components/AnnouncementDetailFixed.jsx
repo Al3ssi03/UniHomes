@@ -44,7 +44,28 @@ const AnnouncementDetailFixed = () => {
     'palermo': { lat: 38.1157, lng: 13.3613 },
     'bari': { lat: 41.1171, lng: 16.8719 },
     'padova': { lat: 45.4064, lng: 11.8768 },
-    'pisa': { lat: 43.7228, lng: 10.4017 }
+    'pisa': { lat: 43.7228, lng: 10.4017 },
+    'catania': { lat: 37.5079, lng: 15.0830 },
+    'verona': { lat: 45.4384, lng: 10.9916 },
+    'messina': { lat: 38.1938, lng: 15.5540 },
+    'trieste': { lat: 45.6495, lng: 13.7768 },
+    'brescia': { lat: 45.5416, lng: 10.2118 },
+    'parma': { lat: 44.8015, lng: 10.3279 },
+    'modena': { lat: 44.6471, lng: 10.9252 },
+    'reggio calabria': { lat: 38.1113, lng: 15.6599 },
+    'reggio emilia': { lat: 44.6989, lng: 10.6298 },
+    'perugia': { lat: 43.1122, lng: 12.3888 },
+    'livorno': { lat: 43.5482, lng: 10.3116 },
+    'cagliari': { lat: 39.2238, lng: 9.1217 },
+    'foggia': { lat: 41.4621, lng: 15.5444 },
+    'salerno': { lat: 40.6824, lng: 14.7681 },
+    'ferrara': { lat: 44.8381, lng: 11.6197 },
+    'rimini': { lat: 44.0678, lng: 12.5695 },
+    'siena': { lat: 43.3188, lng: 11.3307 },
+    'bergamo': { lat: 45.6983, lng: 9.6773 },
+    'udine': { lat: 46.0748, lng: 13.2345 },
+    'cosenza': { lat: 39.2986, lng: 16.2543 },
+    'lecce': { lat: 40.3514, lng: 18.1750 }
   };
 
   useEffect(() => {
@@ -75,6 +96,10 @@ const AnnouncementDetailFixed = () => {
       } else {
         console.warn('❌ Nessuna città specificata nell\'annuncio');
         setGeocodingStatus('error');
+        // Usa coordinate di Roma come fallback anche se non c'è città
+        const fallbackCoords = { lat: 41.9028, lng: 12.4964 };
+        setCoordinates(fallbackCoords);
+        calculateNearbyUniversities(fallbackCoords);
       }
     } catch (err) {
       console.error('❌ Errore caricamento annuncio:', err);
@@ -86,40 +111,10 @@ const AnnouncementDetailFixed = () => {
 
   const geocodeWithFallback = async (indirizzo, città) => {
     setGeocodingStatus('loading');
-    console.log(`🗺️ Tentativo geocoding per: "${indirizzo}, ${città}"`);
+    console.log(`🗺️ Tentativo geocoding per indirizzo: "${indirizzo}", città: "${città}"`);
     
-    // Prova 1: Geocoding con indirizzo completo
-    try {
-      const fullAddress = indirizzo ? `${indirizzo}, ${città}` : città;
-      const coords = await tryGeocoding(fullAddress);
-      if (coords) {
-        setCoordinates(coords);
-        calculateNearbyUniversities(coords);
-        setGeocodingStatus('success');
-        console.log('✅ Geocoding riuscito con indirizzo completo:', coords);
-        return;
-      }
-    } catch (error) {
-      console.warn('⚠️ Geocoding con indirizzo completo fallito:', error);
-    }
-
-    // Prova 2: Geocoding solo con città
-    try {
-      console.log(`🗺️ Tentativo geocoding solo città: "${città}"`);
-      const coords = await tryGeocoding(città);
-      if (coords) {
-        setCoordinates(coords);
-        calculateNearbyUniversities(coords);
-        setGeocodingStatus('success');
-        console.log('✅ Geocoding riuscito con città:', coords);
-        return;
-      }
-    } catch (error) {
-      console.warn('⚠️ Geocoding con città fallito:', error);
-    }
-
-    // Prova 3: Coordinate hardcoded per città principali
-    const cityKey = città.toLowerCase().trim();
+    // Prova 1: Coordinate hardcoded per città principali (più veloce)
+    const cityKey = città ? città.toLowerCase().trim() : '';
     if (cityCoordinates[cityKey]) {
       const coords = cityCoordinates[cityKey];
       setCoordinates(coords);
@@ -129,6 +124,42 @@ const AnnouncementDetailFixed = () => {
       return;
     }
 
+    // Prova 2: Geocoding con indirizzo completo
+    if (indirizzo && indirizzo.trim() && città) {
+      try {
+        const fullAddress = `${indirizzo.trim()}, ${città.trim()}, Italia`;
+        console.log(`🌐 Tentativo geocoding completo: "${fullAddress}"`);
+        const coords = await tryGeocoding(fullAddress);
+        if (coords) {
+          setCoordinates(coords);
+          calculateNearbyUniversities(coords);
+          setGeocodingStatus('success');
+          console.log('✅ Geocoding riuscito con indirizzo completo:', coords);
+          return;
+        }
+      } catch (error) {
+        console.warn('⚠️ Geocoding con indirizzo completo fallito:', error);
+      }
+    }
+
+    // Prova 3: Geocoding solo con città
+    if (città) {
+      try {
+        const cityAddress = `${città.trim()}, Italia`;
+        console.log(`🌐 Tentativo geocoding solo città: "${cityAddress}"`);
+        const coords = await tryGeocoding(cityAddress);
+        if (coords) {
+          setCoordinates(coords);
+          calculateNearbyUniversities(coords);
+          setGeocodingStatus('success');
+          console.log('✅ Geocoding riuscito con città:', coords);
+          return;
+        }
+      } catch (error) {
+        console.warn('⚠️ Geocoding con città fallito:', error);
+      }
+    }
+
     // Fallback finale: Coordinate di Roma
     console.warn('⚠️ Tutti i tentativi di geocoding falliti, uso coordinate Roma');
     const fallbackCoords = { lat: 41.9028, lng: 12.4964 };
@@ -136,6 +167,25 @@ const AnnouncementDetailFixed = () => {
     calculateNearbyUniversities(fallbackCoords);
     setGeocodingStatus('error');
     setMapError(true);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Data non disponibile';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Data non valida';
+      }
+      return date.toLocaleDateString('it-IT', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Errore formato data:', error);
+      return 'Data non disponibile';
+    }
   };
 
   const tryGeocoding = async (address) => {
@@ -185,12 +235,35 @@ const AnnouncementDetailFixed = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!message.trim()) return;
+    if (!message.trim()) {
+      alert('⚠️ Inserisci un messaggio prima di inviare');
+      return;
+    }
     
     setSendingMessage(true);
     try {
       const token = localStorage.getItem('authToken');
-      const userData = JSON.parse(localStorage.getItem('userData'));
+      const userData = localStorage.getItem('userData');
+      
+      if (!token) {
+        alert('❌ Devi essere autenticato per inviare messaggi');
+        setSendingMessage(false);
+        return;
+      }
+
+      if (!userData) {
+        alert('❌ Dati utente non trovati');
+        setSendingMessage(false);
+        return;
+      }
+
+      const userInfo = JSON.parse(userData);
+      
+      console.log('📤 Invio messaggio...', {
+        recipientId: announcement.utente_id,
+        announcementId: announcement.id,
+        senderName: userInfo.nome || userInfo.username || 'Utente'
+      });
       
       const response = await fetch('http://localhost:5000/api/messages', {
         method: 'POST',
@@ -201,21 +274,27 @@ const AnnouncementDetailFixed = () => {
         body: JSON.stringify({
           recipientId: announcement.utente_id,
           announcementId: announcement.id,
-          content: message,
-          senderName: userData.nome || 'Utente'
+          content: message.trim(),
+          senderName: userInfo.nome || userInfo.username || 'Utente'
         })
       });
 
+      console.log('📤 Risposta server:', response.status, response.statusText);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Messaggio inviato:', result);
         alert('✅ Messaggio inviato con successo!');
         setMessage('');
         setShowMessageModal(false);
       } else {
-        alert('❌ Errore nell\'invio del messaggio');
+        const errorData = await response.text();
+        console.error('❌ Errore server:', response.status, errorData);
+        alert(`❌ Errore nell'invio: ${response.status} - ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Errore invio messaggio:', error);
-      alert('❌ Errore di connessione');
+      console.error('❌ Errore invio messaggio:', error);
+      alert(`❌ Errore di connessione: ${error.message}`);
     } finally {
       setSendingMessage(false);
     }
@@ -368,7 +447,7 @@ const AnnouncementDetailFixed = () => {
               </h3>
               <div style={{ display: 'grid', gap: '8px' }}>
                 <p><strong>📍 Indirizzo:</strong> {announcement.indirizzo || 'Non specificato'}, {announcement.città}</p>
-                <p><strong>📅 Pubblicato:</strong> {new Date(announcement.data_creazione).toLocaleDateString('it-IT')}</p>
+                <p><strong>📅 Pubblicato:</strong> {formatDate(announcement.data_creazione)}</p>
                 {announcement.tipo_alloggio && (
                   <p><strong>🏡 Tipo:</strong> {announcement.tipo_alloggio}</p>
                 )}
@@ -556,16 +635,16 @@ const AnnouncementDetailFixed = () => {
                 </div>
                 <div>
                   <p style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 5px 0' }}>
-                    alessio andriulo
+                    {announcement.proprietario_nome || announcement.utente_nome || 'Proprietario'}
                   </p>
                   <p style={{ opacity: 0.8, margin: 0 }}>
-                    📧 @Alessio
+                    📧 {announcement.proprietario_email || announcement.utente_email || 'Email non disponibile'}
                   </p>
                   <p style={{ opacity: 0.8, margin: '5px 0 0 0' }}>
-                    📱 333 333 3333
+                    📱 {announcement.proprietario_telefono || announcement.telefono || 'Telefono non disponibile'}
                   </p>
                   <p style={{ opacity: 0.7, margin: '5px 0 0 0', fontSize: '14px' }}>
-                    📅 Pubblicato il 24 giugno 2025
+                    📅 Pubblicato il {formatDate(announcement.data_creazione)}
                   </p>
                 </div>
               </div>
@@ -624,7 +703,7 @@ const AnnouncementDetailFixed = () => {
                 💬 Invia Messaggio al Proprietario
               </h3>
               <p style={{ opacity: 0.8, marginBottom: '20px' }}>
-                Contatta <strong>alessio andriulo</strong> per l'annuncio "{announcement.titolo}"
+                Contatta <strong>{announcement.proprietario_nome || announcement.utente_nome || 'il proprietario'}</strong> per l'annuncio "{announcement.titolo}"
               </p>
               <textarea
                 style={{

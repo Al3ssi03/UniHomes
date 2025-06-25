@@ -90,9 +90,16 @@ const AnnouncementDetailFixed = () => {
       console.log('📍 Dati annuncio ricevuti:', data);
       setAnnouncement(data);
       
+      // Normalizza il campo città - supporta diverse varianti dal database
+      const city = getCity(data);
+      const address = data.indirizzo || data.via || data.address || null;
+      
+      console.log('🏙️ Città estratta:', city);
+      console.log('🏠 Indirizzo estratto:', address);
+      
       // Prova il geocoding con fallback
-      if (data.città) {
-        await geocodeWithFallback(data.indirizzo, data.città);
+      if (city !== 'Città non specificata') {
+        await geocodeWithFallback(address, city);
       } else {
         console.warn('❌ Nessuna città specificata nell\'annuncio');
         setGeocodingStatus('error');
@@ -113,36 +120,25 @@ const AnnouncementDetailFixed = () => {
     setGeocodingStatus('loading');
     console.log(`🗺️ Tentativo geocoding per indirizzo: "${indirizzo}", città: "${città}"`);
     
-    // Prova 1: Coordinate hardcoded per città principali (più veloce)
-    const cityKey = città ? città.toLowerCase().trim() : '';
-    if (cityCoordinates[cityKey]) {
-      const coords = cityCoordinates[cityKey];
-      setCoordinates(coords);
-      calculateNearbyUniversities(coords);
-      setGeocodingStatus('success');
-      console.log('✅ Usate coordinate predefinite per', città, ':', coords);
-      return;
-    }
-
-    // Prova 2: Geocoding con indirizzo completo
+    // Prova 1: Geocoding preciso con indirizzo completo (PRIORITÀ MASSIMA)
     if (indirizzo && indirizzo.trim() && città) {
       try {
         const fullAddress = `${indirizzo.trim()}, ${città.trim()}, Italia`;
-        console.log(`🌐 Tentativo geocoding completo: "${fullAddress}"`);
+        console.log(`🌐 Tentativo geocoding PRECISO: "${fullAddress}"`);
         const coords = await tryGeocoding(fullAddress);
         if (coords) {
           setCoordinates(coords);
           calculateNearbyUniversities(coords);
           setGeocodingStatus('success');
-          console.log('✅ Geocoding riuscito con indirizzo completo:', coords);
+          console.log('✅ Geocoding PRECISO riuscito con indirizzo completo:', coords);
           return;
         }
       } catch (error) {
-        console.warn('⚠️ Geocoding con indirizzo completo fallito:', error);
+        console.warn('⚠️ Geocoding preciso fallito:', error);
       }
     }
 
-    // Prova 3: Geocoding solo con città
+    // Prova 2: Geocoding solo con città
     if (città) {
       try {
         const cityAddress = `${città.trim()}, Italia`;
@@ -158,6 +154,18 @@ const AnnouncementDetailFixed = () => {
       } catch (error) {
         console.warn('⚠️ Geocoding con città fallito:', error);
       }
+    }
+
+    // Prova 3: Coordinate predefinite per città principali (FALLBACK)
+    const cityKey = città ? città.toLowerCase().trim() : '';
+    if (cityCoordinates[cityKey]) {
+      const coords = cityCoordinates[cityKey];
+      setCoordinates(coords);
+      calculateNearbyUniversities(coords);
+      setGeocodingStatus('success');
+      setMapError(true); // Indica che è approssimativo
+      console.log('⚠️ Usate coordinate predefinite (approssimative) per', città, ':', coords);
+      return;
     }
 
     // Fallback finale: Coordinate di Roma
@@ -188,21 +196,88 @@ const AnnouncementDetailFixed = () => {
     }
   };
 
-  const tryGeocoding = async (address) => {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=it`;
-    console.log('🌐 URL geocoding:', url);
+  // Helper per ottenere la città dall'annuncio
+  const getCity = (announcement) => {
+    return announcement.città || announcement.citta || announcement.city || announcement.location || 'Città non specificata';
+  };
+
+  // Helper per ottenere l'indirizzo completo
+  const getFullAddress = (announcement) => {
+    const address = announcement.indirizzo || announcement.via || announcement.address || '';
+    const city = getCity(announcement);
     
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    console.log('📍 Risposta geocoding:', data);
-    
-    if (data && data.length > 0) {
-      return {
-        lat: parseFloat(data[0].lat),
-        lng: parseFloat(data[0].lon)
-      };
+    if (address && city !== 'Città non specificata') {
+      return `${address}, ${city}`;
+    } else if (city !== 'Città non specificata') {
+      return city;
+    } else if (address) {
+      return address;
+    } else {
+      return 'Indirizzo non specificato';
     }
+  };
+
+  const tryGeocoding = async (address) => {
+    console.log('🌐 Tentativo geocoding per:', address);
+    
+    // API 1: Nominatim OpenStreetMap (principale)
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=it&addressdetails=1`;
+      console.log('🌐 URL Nominatim:', url);
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'UNI-Home-App/1.0'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('📍 Risposta Nominatim:', data);
+      
+      if (data && data.length > 0) {
+        const result = {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon)
+        };
+        console.log('✅ Coordinate trovate con Nominatim:', result);
+        return result;
+      }
+    } catch (error) {
+      console.warn('⚠️ Nominatim fallito:', error);
+    }
+
+    // API 2: Photon (fallback alternativo)
+    try {
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(address)}&limit=1&lang=it`;
+      console.log('🌐 URL Photon (fallback):', url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('📍 Risposta Photon:', data);
+      
+      if (data && data.features && data.features.length > 0) {
+        const coords = data.features[0].geometry.coordinates;
+        const result = {
+          lat: coords[1],
+          lng: coords[0]
+        };
+        console.log('✅ Coordinate trovate con Photon:', result);
+        return result;
+      }
+    } catch (error) {
+      console.warn('⚠️ Photon fallito:', error);
+    }
+
+    console.warn('❌ Tutti i servizi di geocoding hanno fallito per:', address);
     return null;
   };
 
@@ -446,7 +521,8 @@ const AnnouncementDetailFixed = () => {
                 🏠 Informazioni Principali
               </h3>
               <div style={{ display: 'grid', gap: '8px' }}>
-                <p><strong>📍 Indirizzo:</strong> {announcement.indirizzo || 'Non specificato'}, {announcement.città}</p>
+                <p><strong>📍 Indirizzo:</strong> {announcement.indirizzo || 'Non specificato'}</p>
+                <p><strong>🏙️ Città:</strong> {getCity(announcement)}</p>
                 <p><strong>📅 Pubblicato:</strong> {formatDate(announcement.data_creazione)}</p>
                 {announcement.tipo_alloggio && (
                   <p><strong>🏡 Tipo:</strong> {announcement.tipo_alloggio}</p>
@@ -505,7 +581,19 @@ const AnnouncementDetailFixed = () => {
                   marginBottom: '15px',
                   fontSize: '14px'
                 }}>
-                  ⚠️ Posizione approssimativa (geocoding limitato)
+                  ⚠️ Posizione approssimativa - utilizzate coordinate generiche della città
+                </div>
+              )}
+
+              {geocodingStatus === 'success' && !mapError && (
+                <div style={{
+                  background: 'rgba(34, 197, 94, 0.2)',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  marginBottom: '15px',
+                  fontSize: '14px'
+                }}>
+                  ✅ Posizione precisa trovata tramite geocoding dell'indirizzo
                 </div>
               )}
               
@@ -542,10 +630,10 @@ const AnnouncementDetailFixed = () => {
                 }}>
                   <p>🗺️ Mappa non disponibile</p>
                   <p style={{ fontSize: '14px', opacity: 0.7 }}>
-                    Indirizzo: {announcement.indirizzo || 'Non specificato'}, {announcement.città}
+                    Indirizzo: {getFullAddress(announcement)}
                   </p>
                   <button 
-                    onClick={() => geocodeWithFallback(announcement.indirizzo, announcement.città)}
+                    onClick={() => geocodeWithFallback(announcement.indirizzo, getCity(announcement))}
                     style={{
                       background: 'rgba(255, 255, 255, 0.2)',
                       border: 'none',
@@ -570,7 +658,13 @@ const AnnouncementDetailFixed = () => {
                   marginBottom: '15px'
                 }}>
                   📍 Coordinate: {coordinates.lat.toFixed(4)}, {coordinates.lng.toFixed(4)}
-                  {mapError && <span style={{ color: '#ffa500' }}> (approssimative)</span>}
+                  {mapError ? (
+                    <span style={{ color: '#ffa500' }}> (coordinate generiche città)</span>
+                  ) : (
+                    <span style={{ color: '#22c55e' }}> (indirizzo specifico)</span>
+                  )}
+                  <br />
+                  🏠 Indirizzo ricercato: {getFullAddress(announcement)}
                 </div>
               )}
 

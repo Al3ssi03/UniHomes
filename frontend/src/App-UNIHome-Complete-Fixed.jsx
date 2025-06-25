@@ -5,6 +5,9 @@ import UNIHomeAuthPage from './pages/UNIHomeAuthPage-Fixed.jsx';
 import CreateAnnouncementFixed from './components/CreateAnnouncementFixed.jsx';
 import CreateAnnouncementModern from './components/CreateAnnouncementModern.jsx';
 import AnnouncementDetailEnhanced from './components/AnnouncementDetailEnhanced.jsx';
+import AnnouncementDetailWithMap from './components/AnnouncementDetailWithMap.jsx';
+import AnnouncementDetailSimpleMap from './components/AnnouncementDetailSimpleMap.jsx';
+import AnnouncementDetailFixed from './components/AnnouncementDetailFixed.jsx';
 import MessagesPageEnhanced from './components/MessagesPageEnhanced.jsx';
 import AnnouncementDetailSimple from './components/AnnouncementDetailSimple.jsx';
 
@@ -1072,7 +1075,7 @@ export default function UNIHomeApp() {
                 <Dashboard />
               </ProtectedRoute>
             } />            <Route path="/listings" element={<ListingsPage />} />
-            <Route path="/annuncio/:id" element={<AnnouncementDetailEnhanced />} /><Route path="/publish" element={
+            <Route path="/annuncio/:id" element={<AnnouncementDetailFixed />} /><Route path="/publish" element={
               <ProtectedRoute>
                 <CreateAnnouncementPage />
               </ProtectedRoute>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test UNI Home</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b9d, #ff9a56);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .status {
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .button {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+            transition: transform 0.3s ease;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 UNI Home - Test</h1>
+        <div class="status">✅ HTML e CSS funzionano correttamente!</div>
+        <div class="status">🔍 Controllo React in corso...</div>
+        <div id="react-test">⏳ Caricamento React...</div>
+        
+        <br><br>
+        <a href="http://localhost:5173" class="button">Vai a localhost:5173</a>
+        <a href="/index.html" class="button">Ricarica pagina</a>
+    </div>
+
+    <script>
+        console.log("🎨 Test HTML/JS funziona!");
+        
+        // Test se il div root esiste
+        const rootElement = document.getElementById('root');
+        console.log("Root element:", rootElement);
+        
+        // Aggiorna il messaggio
+        setTimeout(() => {
+            const reactTest = document.getElementById('react-test');
+            if (reactTest) {
+                reactTest.innerHTML = rootElement ? 
+                    "✅ Elemento root trovato!" : 
+                    "❌ Elemento root NON trovato!";
+            }
+        }, 1000);
+        
+        // Test delle risorse
+        fetch('/src/main.jsx')
+            .then(response => {
+                console.log("main.jsx status:", response.status);
+                if (response.ok) {
+                    console.log("✅ main.jsx accessibile");
+                } else {
+                    console.log("❌ main.jsx non accessibile");
+                }
+            })
+            .catch(error => {
+                console.log("❌ Errore nel caricamento main.jsx:", error);
+            });
+    </script>
+</body>
+</html>

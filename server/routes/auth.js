@@ -8,7 +8,20 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
   try {
     console.log('🔍 REGISTRAZIONE - Dati ricevuti:', req.body);
-    const { username, email, password, nome, cognome, anno_nascita, telefono, confirmPassword } = req.body;
+    const { 
+      username, 
+      email, 
+      password, 
+      nome, 
+      cognome, 
+      anno_nascita, 
+      telefono, 
+      confirmPassword,
+      citta,
+      provincia,
+      professione,
+      biografia
+    } = req.body;
 
     // Validazione base
     if (!password) {
@@ -45,7 +58,11 @@ router.post('/register', async (req, res) => {
       nome,
       cognome,
       anno_nascita,
-      telefono
+      telefono,
+      citta,
+      provincia,
+      professione,
+      biografia
     });
 
     // Genera token JWT
@@ -64,7 +81,12 @@ router.post('/register', async (req, res) => {
         username: newUser.username,
         email: newUser.email,
         nome: newUser.nome,
-        cognome: newUser.cognome
+        cognome: newUser.cognome,
+        telefono: newUser.telefono,
+        citta: newUser.citta,
+        provincia: newUser.provincia,
+        professione: newUser.professione,
+        biografia: newUser.biografia
       }
     });
   } catch (error) {
@@ -112,7 +134,12 @@ router.post('/login', async (req, res) => {
         username: user.username,
         email: user.email,
         nome: user.nome,
-        cognome: user.cognome
+        cognome: user.cognome,
+        telefono: user.telefono,
+        citta: user.citta,
+        provincia: user.provincia,
+        professione: user.professione,
+        biografia: user.biografia
       }
     });
   } catch (error) {

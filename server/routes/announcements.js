@@ -65,7 +65,7 @@ router.get('/', async (req, res) => {
       where: whereClause,
       include: [{
         model: User,
-        attributes: ['id', 'nome', 'cognome', 'username'] // Non includere password_hash
+        attributes: ['id', 'nome', 'cognome', 'username', 'telefono', 'email', 'citta', 'provincia', 'professione', 'biografia'] // Non includere password_hash
       }],
       order: [['createdAt', 'DESC']],
       limit: parseInt(limit),
@@ -90,7 +90,7 @@ router.get('/:id', async (req, res) => {
     const announcement = await Announcement.findByPk(req.params.id, {
       include: [{
         model: User,
-        attributes: ['id', 'nome', 'cognome', 'username', 'telefono']
+        attributes: ['id', 'nome', 'cognome', 'username', 'telefono', 'email', 'citta', 'provincia', 'professione', 'biografia']
       }]
     });
     
@@ -196,7 +196,7 @@ router.post('/', requireAuth, upload.array('immagini', 5), async (req, res) => {
     const announcementWithUser = await Announcement.findByPk(newAnnouncement.id, {
       include: [{
         model: User,
-        attributes: ['id', 'nome', 'cognome', 'username']
+        attributes: ['id', 'nome', 'cognome', 'username', 'telefono', 'email', 'citta', 'provincia', 'professione', 'biografia']
       }]
     });
     
@@ -236,7 +236,7 @@ router.post('/simple', requireAuth, async (req, res) => {
     const announcementWithUser = await Announcement.findByPk(newAnnouncement.id, {
       include: [{
         model: User,
-        attributes: ['id', 'nome', 'cognome', 'username']
+        attributes: ['id', 'nome', 'cognome', 'username', 'telefono', 'email', 'citta', 'provincia', 'professione', 'biografia']
       }]
     });
     
@@ -297,7 +297,7 @@ router.put('/:id', requireAuth, upload.array('nuove_immagini', 5), async (req, r
     const updatedAnnouncement = await Announcement.findByPk(announcement.id, {
       include: [{
         model: User,
-        attributes: ['id', 'nome', 'cognome', 'username']
+        attributes: ['id', 'nome', 'cognome', 'username', 'telefono', 'email', 'citta', 'provincia', 'professione', 'biografia']
       }]
     });
     
@@ -341,7 +341,7 @@ router.get('/user/my-announcements', requireAuth, async (req, res) => {
       where: { userId: req.userId },
       include: [{
         model: User,
-        attributes: ['id', 'nome', 'cognome', 'username']
+        attributes: ['id', 'nome', 'cognome', 'username', 'telefono', 'email', 'citta', 'provincia', 'professione', 'biografia']
       }],
       order: [['createdAt', 'DESC']]
     });

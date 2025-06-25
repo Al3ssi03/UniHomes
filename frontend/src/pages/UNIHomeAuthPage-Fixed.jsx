@@ -225,8 +225,13 @@ export default function UNIHomeAuthPage() {
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
   const [cognome, setCognome] = useState("");
+  const [email, setEmail] = useState("");
   const [annoNascita, setAnnoNascita] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [citta, setCitta] = useState("");
+  const [provincia, setProvincia] = useState("");
+  const [professione, setProfessione] = useState("");
+  const [biografia, setBiografia] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -266,12 +271,20 @@ export default function UNIHomeAuthPage() {
         setError("Nome e cognome sono obbligatori");
         return false;
       }
+      if (!email.trim() || !email.includes('@')) {
+        setError("Email valida è obbligatoria");
+        return false;
+      }
       if (!annoNascita || annoNascita < 1950 || annoNascita > new Date().getFullYear() - 16) {
         setError("Anno di nascita non valido (devi avere almeno 16 anni)");
         return false;
       }
       if (!telefono.trim()) {
         setError("Numero di telefono è obbligatorio");
+        return false;
+      }
+      if (!citta.trim()) {
+        setError("Città è obbligatoria");
         return false;
       }
     }
@@ -295,7 +308,19 @@ export default function UNIHomeAuthPage() {
       const endpoint = form === "login" ? "/api/auth/login" : "/api/auth/register";
       const data = form === "login" 
         ? { username, password }
-        : { username, password, nome, cognome, anno_nascita: parseInt(annoNascita), telefono };
+        : { 
+            username, 
+            password, 
+            nome, 
+            cognome, 
+            email,
+            anno_nascita: parseInt(annoNascita), 
+            telefono,
+            citta,
+            provincia: provincia || null,
+            professione: professione || null,
+            biografia: biografia || null
+          };
 
       const response = await axios.post(`http://localhost:5000${endpoint}`, data, {
         timeout: 10000
@@ -483,6 +508,87 @@ export default function UNIHomeAuthPage() {
                   required
                   disabled={isLoading || backendStatus !== "online"}
                 />
+              </div>
+
+              <div style={authStyles.inputGroup}>
+                <label style={authStyles.label}>Email</label>
+                <input
+                  type="email"
+                  placeholder="tua.email@esempio.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setFocusedInput("email")}
+                  onBlur={() => setFocusedInput("")}
+                  style={getInputStyle("email")}
+                  required
+                  disabled={isLoading || backendStatus !== "online"}
+                />
+              </div>
+
+              <div style={authStyles.gridCols2}>
+                <div style={authStyles.inputGroup}>
+                  <label style={authStyles.label}>Città</label>
+                  <input
+                    type="text"
+                    placeholder="es. Milano"
+                    value={citta}
+                    onChange={(e) => setCitta(e.target.value)}
+                    onFocus={() => setFocusedInput("citta")}
+                    onBlur={() => setFocusedInput("")}
+                    style={getInputStyle("citta")}
+                    required
+                    disabled={isLoading || backendStatus !== "online"}
+                  />
+                </div>
+                <div style={authStyles.inputGroup}>
+                  <label style={authStyles.label}>Provincia (opzionale)</label>
+                  <input
+                    type="text"
+                    placeholder="es. MI"
+                    value={provincia}
+                    onChange={(e) => setProvincia(e.target.value)}
+                    onFocus={() => setFocusedInput("provincia")}
+                    onBlur={() => setFocusedInput("")}
+                    style={getInputStyle("provincia")}
+                    disabled={isLoading || backendStatus !== "online"}
+                  />
+                </div>
+              </div>
+
+              <div style={authStyles.inputGroup}>
+                <label style={authStyles.label}>Professione (opzionale)</label>
+                <input
+                  type="text"
+                  placeholder="es. Studente, Lavoratore, Dottorando..."
+                  value={professione}
+                  onChange={(e) => setProfessione(e.target.value)}
+                  onFocus={() => setFocusedInput("professione")}
+                  onBlur={() => setFocusedInput("")}
+                  style={getInputStyle("professione")}
+                  disabled={isLoading || backendStatus !== "online"}
+                />
+              </div>
+
+              <div style={authStyles.inputGroup}>
+                <label style={authStyles.label}>Biografia (opzionale)</label>
+                <textarea
+                  placeholder="Parlaci un po' di te... (massimo 200 caratteri)"
+                  value={biografia}
+                  onChange={(e) => setBiografia(e.target.value.slice(0, 200))}
+                  onFocus={() => setFocusedInput("biografia")}
+                  onBlur={() => setFocusedInput("")}
+                  style={{
+                    ...getInputStyle("biografia"),
+                    minHeight: '80px',
+                    resize: 'vertical'
+                  }}
+                  rows="3"
+                  maxLength="200"
+                  disabled={isLoading || backendStatus !== "online"}
+                />
+                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                  {biografia.length}/200 caratteri
+                </div>
               </div>
             </>
           )}

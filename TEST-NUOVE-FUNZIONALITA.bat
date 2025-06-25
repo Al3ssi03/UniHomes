@@ -1,32 +1,42 @@
 @echo off
-echo 🏠 UNI Home - Test Nuove Funzionalità
-
-echo.
-echo ===================================
-echo    AVVIO SISTEMA MIGLIORATO
-echo ===================================
+echo === TEST COMPLETO NUOVE FUNZIONALITÀ ===
 echo.
 
-echo 🔄 Avvio Backend...
-cd /d "%~dp0server"
-start "UNI Home Backend" cmd /k "node index.js"
+echo 🎯 Test delle nuove funzionalità implementate:
+echo ✅ 1. Backend supporta nuovi campi User (citta, provincia, professione, biografia)
+echo ✅ 2. Frontend mostra tutte le info del proprietario
+echo ✅ 3. Messaggistica compatibile con frontend  
+echo ✅ 4. Form registrazione con più campi
+echo.
+
+echo 🌐 Avvio sistema completo per test...
+
+start "UNI-HOME Backend" cmd /k "cd server && echo 🚀 Backend in avvio... && npm start"
+
+timeout /t 5 /nobreak > nul
+
+start "UNI-HOME Frontend" cmd /k "cd frontend && echo 🎨 Frontend in avvio... && npm run dev"
 
 echo.
-echo ⏳ Attendo 3 secondi per l'avvio del backend...
-timeout /t 3 >nul
-
+echo 📋 ISTRUZIONI PER IL TEST:
 echo.
-echo 🔄 Avvio Frontend...
-cd /d "%~dp0frontend"
-start "UNI Home Frontend" cmd /k "npm run dev"
-
+echo 1. Attendi che backend e frontend si avviino (circa 10 secondi)
+echo 2. Vai su http://localhost:5173
+echo 3. Prova la registrazione con i nuovi campi:
+echo    - Email
+echo    - Città  
+echo    - Provincia
+echo    - Professione
+echo    - Biografia
 echo.
-echo ⏳ Attendo 5 secondi per l'avvio del frontend...
-timeout /t 5 >nul
-
+echo 4. Dopo la registrazione, crea un annuncio
+echo 5. Visualizza il dettaglio dell'annuncio
+echo 6. Verifica che tutte le info del proprietario siano visibili
+echo 7. Prova a inviare un messaggio al proprietario
 echo.
-echo 🌐 Apertura browser...
-start "" "http://localhost:3000"
+echo 🎉 Se tutto funziona: NUOVE FUNZIONALITÀ COMPLETATE!
+echo.
+pause
 
 echo.
 echo ✅ UNI Home con Nuove Funzionalità avviato!

@@ -9,6 +9,10 @@ const User = sequelize.define('User', {
   cognome: DataTypes.STRING,
   anno_nascita: DataTypes.INTEGER,
   telefono: DataTypes.STRING,
+  citta: DataTypes.STRING,
+  provincia: DataTypes.STRING,
+  professione: DataTypes.STRING,
+  biografia: DataTypes.TEXT
 });
 
 module.exports = User;

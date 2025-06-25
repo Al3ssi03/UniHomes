@@ -714,7 +714,7 @@ const AnnouncementDetailFixed = () => {
               <h3 style={{ fontSize: '1.3rem', marginBottom: '15px' }}>
                 👤 Proprietario
               </h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '20px' }}>
                 <div style={{
                   width: '60px',
                   height: '60px',
@@ -723,23 +723,66 @@ const AnnouncementDetailFixed = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '24px'
+                  fontSize: '24px',
+                  flexShrink: 0
                 }}>
                   👤
                 </div>
-                <div>
-                  <p style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 5px 0' }}>
-                    {announcement.proprietario_nome || announcement.utente_nome || 'Proprietario'}
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 8px 0' }}>
+                    {announcement.User?.nome && announcement.User?.cognome 
+                      ? `${announcement.User.nome} ${announcement.User.cognome}`
+                      : announcement.User?.username || 'Proprietario'
+                    }
                   </p>
-                  <p style={{ opacity: 0.8, margin: 0 }}>
-                    📧 {announcement.proprietario_email || announcement.utente_email || 'Email non disponibile'}
-                  </p>
-                  <p style={{ opacity: 0.8, margin: '5px 0 0 0' }}>
-                    📱 {announcement.proprietario_telefono || announcement.telefono || 'Telefono non disponibile'}
-                  </p>
-                  <p style={{ opacity: 0.7, margin: '5px 0 0 0', fontSize: '14px' }}>
+                  
+                  {/* Informazioni di contatto */}
+                  {announcement.User?.email && (
+                    <p style={{ opacity: 0.8, margin: '0 0 5px 0', fontSize: '14px' }}>
+                      📧 {announcement.User.email}
+                    </p>
+                  )}
+                  
+                  {announcement.User?.telefono && (
+                    <p style={{ opacity: 0.8, margin: '0 0 5px 0', fontSize: '14px' }}>
+                      📱 {announcement.User.telefono}
+                    </p>
+                  )}
+                  
+                  {/* Località */}
+                  {(announcement.User?.citta || announcement.User?.provincia) && (
+                    <p style={{ opacity: 0.8, margin: '0 0 5px 0', fontSize: '14px' }}>
+                      � {[announcement.User?.citta, announcement.User?.provincia].filter(Boolean).join(', ')}
+                    </p>
+                  )}
+                  
+                  {/* Professione */}
+                  {announcement.User?.professione && (
+                    <p style={{ opacity: 0.8, margin: '0 0 5px 0', fontSize: '14px' }}>
+                      💼 {announcement.User.professione}
+                    </p>
+                  )}
+                  
+                  <p style={{ opacity: 0.7, margin: '8px 0 0 0', fontSize: '14px' }}>
                     📅 Pubblicato il {formatDate(announcement.data_creazione)}
                   </p>
+                  
+                  {/* Biografia */}
+                  {announcement.User?.biografia && (
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      marginTop: '12px',
+                      fontSize: '14px',
+                      lineHeight: '1.4'
+                    }}>
+                      <p style={{ margin: '0 0 5px 0', fontWeight: '500', opacity: 0.9 }}>📝 Descrizione</p>
+                      <p style={{ margin: 0, opacity: 0.8 }}>
+                        {announcement.User.biografia}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -797,7 +840,12 @@ const AnnouncementDetailFixed = () => {
                 💬 Invia Messaggio al Proprietario
               </h3>
               <p style={{ opacity: 0.8, marginBottom: '20px' }}>
-                Contatta <strong>{announcement.proprietario_nome || announcement.utente_nome || 'il proprietario'}</strong> per l'annuncio "{announcement.titolo}"
+                Contatta <strong>
+                  {announcement.User?.nome && announcement.User?.cognome 
+                    ? `${announcement.User.nome} ${announcement.User.cognome}`
+                    : announcement.User?.username || 'il proprietario'
+                  }
+                </strong> per l'annuncio "{announcement.titolo}"
               </p>
               <textarea
                 style={{

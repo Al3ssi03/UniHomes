@@ -260,4 +260,79 @@ router.delete('/:messageId', requireAuth, async (req, res) => {
     }
   });
   
+// POST - Invia nuovo messaggio (route compatibile per frontend)
+router.post('/', requireAuth, async (req, res) => {
+  try {
+    console.log('📨 MESSAGGIO RICEVUTO - Route: POST /api/messages');
+    console.log('📨 Body ricevuto:', req.body);
+    console.log('📨 User ID:', req.userId);
+    
+    const { recipientId, content, announcementId, senderName } = req.body;
+    
+    // Validazione input
+    if (!recipientId || !content) {
+      console.log('❌ Dati mancanti - recipientId:', recipientId, 'content:', content);
+      return res.status(400).json({ 
+        message: 'ID destinatario e contenuto sono obbligatori' 
+      });
+    }
+    
+    if (content.trim().length === 0) {
+      return res.status(400).json({ 
+        message: 'Il messaggio non può essere vuoto' 
+      });
+    }
+    
+    if (recipientId == req.userId) {
+      return res.status(400).json({ 
+        message: 'Non puoi inviare messaggi a te stesso' 
+      });
+    }
+    
+    // Verifica che il destinatario esista
+    const receiver = await User.findByPk(recipientId);
+    if (!receiver) {
+      return res.status(404).json({ message: 'Destinatario non trovato' });
+    }
+    
+    // Crea il messaggio
+    const newMessage = await Message.create({
+      senderId: req.userId,
+      receiverId: parseInt(recipientId),
+      contenuto: content.trim(),
+      announcementId: announcementId || null
+    });
+    
+    console.log('✅ Messaggio creato con successo:', newMessage.id);
+    
+    // Recupera il messaggio con i dati degli utenti per la risposta
+    const messageWithUsers = await Message.findByPk(newMessage.id, {
+      include: [
+        {
+          model: User,
+          as: 'Sender',
+          attributes: ['id', 'nome', 'cognome', 'username', 'email']
+        },
+        {
+          model: User,
+          as: 'Receiver',
+          attributes: ['id', 'nome', 'cognome', 'username', 'email']
+        }
+      ]
+    });
+    
+    res.status(201).json({
+      message: 'Messaggio inviato con successo',
+      data: messageWithUsers
+    });
+    
+  } catch (error) {
+    console.error('❌ Errore invio messaggio (route /):', error);
+    res.status(500).json({ 
+      message: 'Errore durante l\'invio del messaggio',
+      error: error.message 
+    });
+  }
+});
+
   module.exports = router;

@@ -440,9 +440,7 @@ const AnnouncementDetail = () => {
               }}>
                 {announcement.descrizione || 'Nessuna descrizione disponibile.'}
               </p>
-            </div>
-
-            {/* Indirizzo */}
+            </div>            {/* Indirizzo */}
             {announcement.indirizzo && (
               <div style={{ marginBottom: '30px' }}>
                 <h3 style={{
@@ -455,10 +453,22 @@ const AnnouncementDetail = () => {
                 </h3>
                 <p style={{
                   color: 'rgba(255, 255, 255, 0.9)',
-                  fontSize: '16px'
+                  fontSize: '16px',
+                  lineHeight: '1.5'
                 }}>
-                  {announcement.indirizzo}
+                  <strong>{announcement.indirizzo}</strong><br/>
+                  {announcement.citta}{announcement.provincia ? ` (${announcement.provincia})` : ''}, Italia
                 </p>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  marginTop: '10px',
+                  fontSize: '14px',
+                  color: 'rgba(255, 255, 255, 0.8)'
+                }}>
+                  🎯 Indirizzo ricercato: {announcement.indirizzo}, {announcement.citta}, {announcement.provincia}, Italia
+                </div>
               </div>
             )}
 
@@ -546,11 +556,27 @@ const AnnouncementDetail = () => {
               background: 'rgba(255, 255, 255, 0.1)',
               padding: '20px',
               borderRadius: '15px',
-              border: '1px solid rgba(255, 255, 255, 0.2)'
-            }}>
+              border: '1px solid rgba(255, 255, 255, 0.2)'            }}>              {/* DEBUG INFO */}
+              <div style={{
+                background: 'rgba(255, 255, 0, 0.1)',
+                padding: '10px',
+                borderRadius: '5px',
+                marginBottom: '10px',
+                fontSize: '12px',
+                fontFamily: 'monospace',
+                color: 'white'
+              }}>
+                <strong>🐛 DEBUG MAPPA:</strong><br/>
+                Indirizzo originale: {announcement.indirizzo || 'N/A'}<br/>
+                Città: {announcement.citta || 'N/A'}<br/>
+                Provincia: {announcement.provincia || 'N/A'}<br/>
+                <strong>Indirizzo ricercato:</strong> {`${announcement.indirizzo}, ${announcement.citta}, ${announcement.provincia}, Italia`}<br/>
+                <em>Il sistema proverà anche varianti come "Via Brunelleschi, Oria, Brindisi, Italia"</em>
+              </div>
               <LocationMap 
-                address={announcement.indirizzo}
-                city={announcement.citta}
+                cityName={announcement.citta}
+                address={announcement.indirizzo}                province={announcement.provincia}
+                fullAddress={`${announcement.indirizzo}, ${announcement.citta}, ${announcement.provincia}, Italia`}
               />
             </div>
           </div>

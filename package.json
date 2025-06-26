@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/Al3ssi03/UniHomes#readme",
   "dependencies": {
+    "axios": "^1.10.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "pg": "^8.16.0",

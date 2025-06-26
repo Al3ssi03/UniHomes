@@ -14,6 +14,7 @@ const AnnouncementDetailFixed = () => {
   const [nearbyUniversities, setNearbyUniversities] = useState([]);
   const [mapError, setMapError] = useState(false);
   const [geocodingStatus, setGeocodingStatus] = useState('idle'); // idle, loading, success, error
+  const [lastSearchedAddress, setLastSearchedAddress] = useState(''); // Mostra l'indirizzo effettivamente ricercato
 
   // Lista università italiane con coordinate precise
   const universities = [
@@ -126,6 +127,7 @@ const AnnouncementDetailFixed = () => {
     if (indirizzo && indirizzo.trim() && città && provincia) {
       try {
         const fullAddress = `${indirizzo.trim()}, ${città.trim()}, ${provincia.trim()}, Italia`;
+        setLastSearchedAddress(fullAddress); // Registra l'indirizzo ricercato
         console.log(`🌐 Tentativo geocoding ULTRA-PRECISO: "${fullAddress}"`);
         const coords = await tryGeocoding(fullAddress);
         if (coords) {
@@ -144,6 +146,7 @@ const AnnouncementDetailFixed = () => {
     if (indirizzo && indirizzo.trim() && città) {
       try {
         const fullAddress = `${indirizzo.trim()}, ${città.trim()}, Italia`;
+        setLastSearchedAddress(fullAddress); // Registra l'indirizzo ricercato
         console.log(`🌐 Tentativo geocoding PRECISO: "${fullAddress}"`);
         const coords = await tryGeocoding(fullAddress);
         if (coords) {
@@ -162,6 +165,7 @@ const AnnouncementDetailFixed = () => {
     if (città && provincia) {
       try {
         const cityAddress = `${città.trim()}, ${provincia.trim()}, Italia`;
+        setLastSearchedAddress(cityAddress); // Registra l'indirizzo ricercato
         console.log(`🌐 Tentativo geocoding città + provincia: "${cityAddress}"`);
         const coords = await tryGeocoding(cityAddress);
         if (coords) {
@@ -180,6 +184,7 @@ const AnnouncementDetailFixed = () => {
     if (città) {
       try {
         const cityAddress = `${città.trim()}, Italia`;
+        setLastSearchedAddress(cityAddress); // Registra l'indirizzo ricercato
         console.log(`🌐 Tentativo geocoding solo città: "${cityAddress}"`);
         const coords = await tryGeocoding(cityAddress);
         if (coords) {
@@ -198,6 +203,7 @@ const AnnouncementDetailFixed = () => {
     const cityKey = città ? città.toLowerCase().trim() : '';
     if (cityCoordinates[cityKey]) {
       const coords = cityCoordinates[cityKey];
+      setLastSearchedAddress(`${città} (coordinate predefinite)`); // Registra fallback
       setCoordinates(coords);
       calculateNearbyUniversities(coords);
       setGeocodingStatus('success');
@@ -208,6 +214,7 @@ const AnnouncementDetailFixed = () => {
 
     // Fallback finale: Coordinate di Roma
     console.warn('⚠️ Tutti i tentativi di geocoding falliti, uso coordinate Roma');
+    setLastSearchedAddress('Roma, Italia (fallback finale)'); // Registra fallback finale
     const fallbackCoords = { lat: 41.9028, lng: 12.4964 };
     setCoordinates(fallbackCoords);
     calculateNearbyUniversities(fallbackCoords);
@@ -714,7 +721,7 @@ const AnnouncementDetailFixed = () => {
                     <span style={{ color: '#22c55e' }}> (indirizzo specifico)</span>
                   )}
                   <br />
-                  🏠 Indirizzo ricercato: {getFullAddress(announcement)}
+                  🏠 Indirizzo ricercato: {lastSearchedAddress || getFullAddress(announcement)}
                 </div>
               )}
 

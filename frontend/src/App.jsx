@@ -1,0 +1,1131 @@
+// UNI Home - App Completa con Sistema di Autenticazione e Navigazione FUNZIONANTE
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useLocation } from "react-router-dom";
+import UNIHomeAuthPage from './pages/UNIHomeAuthPage-Fixed.jsx';
+import CreateAnnouncementFixed from './components/CreateAnnouncementFixed.jsx';
+import CreateAnnouncementModern from './components/CreateAnnouncementModern.jsx';
+import AnnouncementDetailEnhanced from './components/AnnouncementDetailEnhanced.jsx';
+import AnnouncementDetailWithMap from './components/AnnouncementDetailWithMap.jsx';
+import AnnouncementDetailSimpleMap from './components/AnnouncementDetailSimpleMap.jsx';
+import AnnouncementDetailFixed from './components/AnnouncementDetailFixed.jsx';
+import MessagesPageEnhanced from './components/MessagesPageEnhanced.jsx';
+import AnnouncementDetailSimple from './components/AnnouncementDetailSimple.jsx';
+
+// Context per gestire l'autenticazione
+const AuthContext = createContext(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    // Fallback se il context non è disponibile
+    return {
+      isAuthenticated: !!localStorage.getItem('authToken'),
+      user: localStorage.getItem('userData') ? JSON.parse(localStorage.getItem('userData')) : null,
+      login: (userData, token) => {
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('userData', JSON.stringify(userData));
+        window.location.reload();
+      },
+      logout: () => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        window.location.href = '/';
+      },
+      loading: false
+    };
+  }
+  return context;
+};
+
+// Provider per l'autenticazione
+const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Controlla se l'utente è già autenticato
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('userData');
+    
+    if (token && userData) {
+      try {
+        setUser(JSON.parse(userData));
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Errore parsing userData:', error);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const login = (userData, token) => {
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('userData', JSON.stringify(userData));
+    setUser(userData);
+    setIsAuthenticated(true);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
+  const value = {
+    isAuthenticated,
+    user,
+    login,
+    logout,
+    loading
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// Design System UNI Home
+const theme = {
+  colors: {
+    primary: '#6366f1',
+    primaryDark: '#4f46e5',
+    secondary: '#06b6d4',
+    secondaryDark: '#0891b2',
+    accent: '#f59e0b',
+    success: '#10b981',
+    error: '#ef4444',
+    warning: '#f59e0b',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    backgroundAlt: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+    surface: 'rgba(255, 255, 255, 0.95)',
+    surfaceGlass: 'rgba(255, 255, 255, 0.1)',
+    text: '#1f2937',
+    textLight: '#6b7280',
+    white: '#ffffff'
+  },
+  shadows: {
+    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+    glow: '0 0 30px rgba(99, 102, 241, 0.3)'
+  },
+  transitions: {
+    fast: 'all 0.15s ease',
+    normal: 'all 0.3s ease',
+    slow: 'all 0.5s ease'
+  },
+  borderRadius: {
+    sm: '6px',
+    md: '12px',
+    lg: '16px',
+    xl: '24px',
+    full: '9999px'
+  }
+};
+
+// Stili per l'app
+const styles = {
+  container: {
+    minHeight: '100vh',
+    background: theme.colors.background,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    color: theme.colors.white
+  },
+  navbar: {
+    background: theme.colors.surfaceGlass,
+    backdropFilter: 'blur(20px) saturate(150%)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    padding: '16px 32px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    position: 'sticky',
+    top: 0,
+    zIndex: 1000,
+    transition: theme.transitions.normal
+  },
+  logo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    cursor: 'pointer',
+    transition: theme.transitions.fast
+  },
+  logoIcon: {
+    width: '40px',
+    height: '40px',
+    background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
+    borderRadius: theme.borderRadius.md,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+    boxShadow: theme.shadows.glow,
+    transition: theme.transitions.fast
+  },
+  logoText: {
+    fontSize: '24px',
+    fontWeight: '700',
+    background: `linear-gradient(135deg, ${theme.colors.white}, ${theme.colors.secondary})`,
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text'
+  },
+  navButtons: {
+    display: 'flex',
+    gap: '12px',
+    alignItems: 'center'
+  },
+  navMenu: {
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'center',
+    flexWrap: 'wrap'
+  },
+  button: {
+    background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.primaryDark})`,
+    color: theme.colors.white,
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: theme.borderRadius.md,
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: theme.transitions.fast,
+    boxShadow: theme.shadows.md,
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  buttonOutline: {
+    background: 'transparent',
+    color: theme.colors.white,
+    border: `2px solid ${theme.colors.surfaceGlass}`,
+    padding: '8px 18px',
+    borderRadius: theme.borderRadius.md,
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: theme.transitions.fast,
+    backdropFilter: 'blur(10px)',
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  pageContent: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '40px 20px',
+    textAlign: 'center'
+  },
+  pageTitle: {
+    fontSize: 'clamp(2rem, 5vw, 3rem)',
+    fontWeight: '800',
+    marginBottom: '20px',
+    background: `linear-gradient(135deg, ${theme.colors.white}, ${theme.colors.secondary})`,
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text'
+  },
+  pageSubtitle: {
+    fontSize: '1.2rem',
+    opacity: 0.9,
+    marginBottom: '40px',
+    maxWidth: '600px',
+    margin: '0 auto 40px auto'
+  },
+  card: {
+    background: theme.colors.surfaceGlass,
+    padding: '30px',
+    borderRadius: theme.borderRadius.lg,
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    marginBottom: '20px',
+    transition: theme.transitions.fast,
+    cursor: 'pointer'
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: '20px',
+    marginTop: '40px'
+  }
+};
+
+// Logo SVG UNI Home
+const UNIHomeLogo = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 3L2 12h2v8h6v-6h4v6h6v-8h2L12 3z"/>
+  </svg>
+);
+
+// Componente di protezione per route autenticate
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '60vh',
+        flexDirection: 'column',
+        gap: '20px'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: `3px solid ${theme.colors.surfaceGlass}`,
+          borderTop: `3px solid ${theme.colors.primary}`,
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <p>Caricamento...</p>
+      </div>
+    );
+  }
+  
+  return isAuthenticated ? children : <Navigate to="/auth" replace />;
+};
+
+// Navbar moderna con menu completo
+const ModernNavbar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
+  return (
+    <nav style={styles.navbar}>
+      <div style={styles.logo} onClick={() => navigate('/')}>
+        <div style={styles.logoIcon}>
+          <UNIHomeLogo />
+        </div>
+        <span style={styles.logoText}>UNI Home</span>
+      </div>
+      
+      <div style={styles.navButtons}>
+        {isAuthenticated ? (
+          <div style={styles.navMenu}>
+            <button
+              style={location.pathname === '/dashboard' ? styles.button : styles.buttonOutline}
+              onClick={() => handleNavigation('/dashboard')}
+            >
+              🏠 Dashboard
+            </button>
+            <button
+              style={location.pathname === '/listings' ? styles.button : styles.buttonOutline}
+              onClick={() => handleNavigation('/listings')}
+            >
+              🔍 Cerca
+            </button>
+            <button
+              style={location.pathname === '/publish' ? styles.button : styles.buttonOutline}
+              onClick={() => handleNavigation('/publish')}
+            >
+              📝 Pubblica
+            </button>
+            <button
+              style={location.pathname === '/messages' ? styles.button : styles.buttonOutline}
+              onClick={() => handleNavigation('/messages')}
+            >
+              💬 Messaggi
+            </button>
+            <button
+              style={location.pathname === '/profile' ? styles.button : styles.buttonOutline}
+              onClick={() => handleNavigation('/profile')}
+            >
+              👤 {user?.nome || 'Profilo'}
+            </button>
+            <button
+              style={styles.button}
+              onClick={handleLogout}
+            >
+              🚪 Logout
+            </button>
+          </div>
+        ) : (
+          <div style={styles.navMenu}>
+            <button
+              style={styles.buttonOutline}
+              onClick={() => navigate('/auth')}
+            >
+              🔐 Accedi
+            </button>
+            <button
+              style={styles.button}
+              onClick={() => navigate('/auth')}
+            >
+              🚀 Registrati
+            </button>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+// Homepage per utenti non autenticati
+const Homepage = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  // Se l'utente è autenticato, mostra la dashboard
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return (
+    <div style={styles.pageContent}>
+      <h1 style={styles.pageTitle}>
+        🏠 Benvenuto in UNI Home
+      </h1>
+      
+      <p style={styles.pageSubtitle}>
+        La piattaforma più moderna per trovare alloggi universitari. 
+        Connettiti con altri studenti e trova la tua casa ideale.
+      </p>
+      
+      <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <button
+          style={{
+            ...styles.button,
+            padding: '16px 32px',
+            fontSize: '16px'
+          }}
+          onClick={() => navigate('/auth')}
+        >
+          🚀 Inizia Ora
+        </button>
+        <button
+          style={{
+            ...styles.buttonOutline,
+            padding: '14px 30px',
+            fontSize: '16px'
+          }}
+          onClick={() => navigate('/auth')}
+        >
+          🔍 Scopri di Più
+        </button>
+      </div>
+      
+      <div style={styles.grid}>
+        <div style={styles.card}>
+          <h3>🔍 Trova la Casa Perfetta</h3>
+          <p>Cerca tra centinaia di annunci verificati</p>
+        </div>
+        <div style={styles.card}>
+          <h3>💬 Connettiti con Studenti</h3>
+          <p>Chat diretta con proprietari e coinquilini</p>
+        </div>
+        <div style={styles.card}>
+          <h3>🛡️ Sicurezza Garantita</h3>
+          <p>Tutti gli annunci sono verificati</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Dashboard per utenti autenticati
+const Dashboard = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  return (
+    <div style={styles.pageContent}>
+      <h1 style={styles.pageTitle}>
+        👋 Ciao, {user?.nome || 'Studente'}!
+      </h1>
+      
+      <p style={styles.pageSubtitle}>
+        Benvenuto nella tua dashboard UNI Home
+      </p>
+      
+      <div style={styles.grid}>
+        <div style={styles.card} onClick={() => navigate('/listings')}>
+          <h3>🔍 Cerca Case</h3>
+          <p>Trova il tuo alloggio ideale</p>
+          <button style={styles.button}>Inizia Ricerca</button>
+        </div>
+        <div style={styles.card} onClick={() => navigate('/publish')}>
+          <h3>📝 Pubblica Annuncio</h3>
+          <p>Condividi la tua casa</p>
+          <button style={styles.button}>Crea Annuncio</button>
+        </div>
+        <div style={styles.card} onClick={() => navigate('/messages')}>
+          <h3>💬 I Tuoi Messaggi</h3>
+          <p>Gestisci le conversazioni</p>
+          <button style={styles.button}>Apri Chat</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Pagina di ricerca annunci
+const ListingsPage = () => {
+  const navigate = useNavigate();
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  const fetchListings = async () => {
+    try {
+      setError('');
+      // Rimuoviamo l'autenticazione obbligatoria per la ricerca pubblica
+      const response = await fetch('http://localhost:5000/api/announcements');
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Dati ricevuti:', data); // Debug
+        // Controlla se i dati sono nell'oggetto announcements
+        const announcementsArray = data.announcements || data;
+        setListings(Array.isArray(announcementsArray) ? announcementsArray : []);
+      } else {
+        setError(`Errore server: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Errore caricamento annunci:', error);
+      setError('Errore di connessione al server');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={styles.pageContent}>
+        <h1 style={styles.pageTitle}>🔍 Caricamento annunci...</h1>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={styles.pageContent}>
+        <h1 style={styles.pageTitle}>🔍 Cerca la Tua Casa</h1>
+        <div style={styles.card}>
+          <h3>❌ Errore</h3>
+          <p>{error}</p>
+          <button style={styles.button} onClick={fetchListings}>
+            🔄 Riprova
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={styles.pageContent}>
+      <h1 style={styles.pageTitle}>🔍 Cerca la Tua Casa</h1>
+      
+      <p style={styles.pageSubtitle}>
+        Esplora centinaia di annunci verificati
+      </p>
+      
+      {listings.length === 0 ? (
+        <div style={styles.card}>
+          <h3>📋 Nessun Annuncio Trovato</h3>
+          <p>Al momento non ci sono annunci disponibili. Torna più tardi!</p>
+        </div>
+      ) : (        <div style={styles.grid}>
+          {listings.map((listing) => (
+            <div key={listing.id} style={{
+              ...styles.card,
+              background: 'linear-gradient(135deg, white 0%, #f8fafc 100%)',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '24px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-5px)';
+              e.target.style.boxShadow = '0 20px 40px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+            }}>
+              
+              {/* Decorative gradient */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4)'
+              }}></div>
+              
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                marginBottom: '12px',
+                color: '#1f2937',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                🏠 {listing.titolo}
+              </h3>
+              
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '8px',
+                fontSize: '14px'
+              }}>
+                <span style={{
+                  background: '#f3f4f6',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  color: '#6b7280',
+                  fontWeight: '500'
+                }}>
+                  📍 {listing.citta || listing.città}
+                </span>
+                <span style={{
+                  background: 'linear-gradient(135deg, #059669, #10b981)',
+                  color: 'white',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontWeight: 'bold',
+                  fontSize: '16px'
+                }}>
+                  💰 €{listing.prezzo}/mese
+                </span>
+              </div>
+              
+              <p style={{
+                color: '#6b7280',
+                lineHeight: '1.5',
+                marginBottom: '20px',
+                fontSize: '14px'
+              }}>
+                {listing.descrizione?.substring(0, 100)}...
+              </p>
+              
+              <button 
+                style={{
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontSize: '14px',
+                  width: '100%',
+                  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
+                }}
+                onClick={() => navigate(`/annuncio/${listing.id}`)}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 8px 20px rgba(99, 102, 241, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.3)';
+                }}
+              >
+                ✨ Vedi Dettagli
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Pagina per pubblicare annunci
+const PublishPage = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    titolo: '',
+    descrizione: '',
+    prezzo: '',
+    città: '',
+    indirizzo: ''
+  });  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        alert('❌ Non sei autenticato. Effettua il login prima.');
+        return;
+      }
+      
+      // Valida i dati del form
+      if (!formData.titolo || !formData.prezzo || !formData.città) {
+        alert('❌ Compila tutti i campi obbligatori: titolo, prezzo e città');
+        return;
+      }
+      
+      // Crea FormData per includere le immagini
+      const formDataToSend = new FormData();
+      formDataToSend.append('titolo', formData.titolo);
+      formDataToSend.append('descrizione', formData.descrizione);
+      formDataToSend.append('prezzo', formData.prezzo);
+      formDataToSend.append('città', formData.città);
+      formDataToSend.append('indirizzo', formData.indirizzo);
+      
+      // Aggiungi le immagini
+      images.forEach((image, index) => {
+        formDataToSend.append('immagini', image);
+      });
+        console.log('Invio annuncio...', formData); // Debug
+      
+      // Debug: Verifica il contenuto del FormData
+      console.log('FormData contents:');
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(key, ':', value);
+      }
+      
+      const response = await fetch('http://localhost:5000/api/announcements', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+          // Non specificare Content-Type per FormData
+        },
+        body: formDataToSend
+      });
+
+      if (response.ok) {
+        alert('✅ Annuncio pubblicato con successo!');
+        // Reset del form
+        setFormData({
+          titolo: '',
+          descrizione: '',
+          prezzo: '',
+          città: '',
+          indirizzo: ''
+        });
+        setImages([]);
+        navigate('/listings');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Errore server:', response.status, errorData);
+        alert(`❌ Errore ${response.status}: ${errorData.message || 'Errore nella pubblicazione dell\'annuncio'}`);
+      }
+    } catch (error) {
+      console.error('Errore:', error);
+      alert(`❌ Errore di connessione: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Limita a massimo 5 immagini
+    if (files.length > 5) {
+      alert('Massimo 5 immagini consentite');
+      return;
+    }
+    
+    // Verifica dimensione file (5MB max)
+    for (let file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Dimensione file troppo grande. Max 5MB per immagine.');
+        return;
+      }
+    }
+    
+    setImages(files);
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '12px',
+    borderRadius: theme.borderRadius.md,
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    background: 'rgba(255, 255, 255, 0.1)',
+    color: theme.colors.white,
+    fontSize: '16px',
+    marginBottom: '15px'
+  };
+
+  return (
+    <div style={styles.pageContent}>
+      <h1 style={styles.pageTitle}>📝 Pubblica il tuo Annuncio</h1>
+      
+      <form onSubmit={handleSubmit} style={{
+        ...styles.card,
+        textAlign: 'left',
+        maxWidth: '600px',
+        margin: '0 auto'
+      }}>
+        <input
+          type="text"
+          placeholder="Titolo annuncio (es: Stanza singola vicino università)"
+          value={formData.titolo}
+          onChange={(e) => setFormData({...formData, titolo: e.target.value})}
+          style={inputStyle}
+          required
+        />
+        
+        <textarea
+          placeholder="Descrizione dettagliata..."
+          value={formData.descrizione}
+          onChange={(e) => setFormData({...formData, descrizione: e.target.value})}
+          style={{
+            ...inputStyle,
+            minHeight: '100px',
+            resize: 'vertical'
+          }}
+          required
+        />
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <input
+            type="number"
+            placeholder="Prezzo (€/mese)"
+            value={formData.prezzo}
+            onChange={(e) => setFormData({...formData, prezzo: e.target.value})}
+            style={inputStyle}
+            required
+          />
+          
+          <input
+            type="text"
+            placeholder="Città"
+            value={formData.città}
+            onChange={(e) => setFormData({...formData, città: e.target.value})}
+            style={inputStyle}
+            required
+          />
+        </div>        <input
+          type="text"
+          placeholder="Indirizzo"
+          value={formData.indirizzo}
+          onChange={(e) => setFormData({...formData, indirizzo: e.target.value})}
+          style={inputStyle}
+          required
+        />        {/* Campo per upload immagini */}
+        <div style={{marginBottom: '15px'}}>
+          <label style={{
+            display: 'block',
+            color: theme.colors.white,
+            marginBottom: '8px',
+            fontSize: '14px',
+            fontWeight: '600'
+          }}>
+            📷 Immagini Annuncio (max 5, 5MB ciascuna)
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            onChange={handleImageChange}
+            style={{
+              ...inputStyle,
+              padding: '10px',
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+              border: '2px dashed rgba(255, 255, 255, 0.3)'
+            }}
+          />
+          {images.length > 0 && (
+            <div style={{
+              marginTop: '15px',
+              color: theme.colors.white,
+              fontSize: '14px'
+            }}>
+              ✅ {images.length} immagine{images.length > 1 ? 'i' : ''} selezionate
+              
+              {/* Anteprime delle immagini */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                gap: '10px',
+                marginTop: '10px',
+                maxHeight: '200px',
+                overflowY: 'auto'
+              }}>
+                {Array.from(images).map((file, index) => {
+                  const objectURL = URL.createObjectURL(file);
+                  return (
+                    <div key={index} style={{
+                      position: 'relative',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      border: '2px solid rgba(255, 255, 255, 0.3)'
+                    }}>
+                      <img 
+                        src={objectURL}
+                        alt={`Anteprima ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '80px',
+                          objectFit: 'cover'
+                        }}
+                        onLoad={() => URL.revokeObjectURL(objectURL)}
+                      />
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '2px',
+                        left: '2px',
+                        right: '2px',
+                        background: 'rgba(0, 0, 0, 0.7)',
+                        color: 'white',
+                        fontSize: '10px',
+                        padding: '2px 4px',
+                        borderRadius: '4px',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {file.name}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newImages = Array.from(images).filter((_, i) => i !== index);
+                          setImages(newImages);
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: '2px',
+                          right: '2px',
+                          background: 'rgba(255, 0, 0, 0.8)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '20px',
+                          height: '20px',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                        title="Rimuovi immagine"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div style={{
+                marginTop: '8px',
+                fontSize: '12px',
+                opacity: 0.8
+              }}>
+                💡 Clicca sulla × per rimuovere un'immagine
+              </div>
+            </div>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            ...styles.button,
+            width: '100%',
+            padding: '16px',
+            fontSize: '16px',
+            fontWeight: '700',
+            justifyContent: 'center'
+          }}
+        >
+          {loading ? '📤 Pubblicazione...' : '🚀 Pubblica Annuncio'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+// Pagina messaggi
+const MessagesPage = () => {
+  return (
+    <div style={styles.pageContent}>
+      <h1 style={styles.pageTitle}>💬 I Tuoi Messaggi</h1>
+      
+      <p style={styles.pageSubtitle}>
+        Gestisci le conversazioni con proprietari e coinquilini
+      </p>
+      
+      <div style={styles.card}>
+        <h3>📧 Centro Messaggi</h3>
+        <p>La funzione di messaggistica sarà disponibile presto!</p>
+        <p>Per ora puoi contattare direttamente i proprietari tramite telefono.</p>
+      </div>
+    </div>
+  );
+};
+
+// Pagina profilo utente
+const ProfilePage = () => {
+  const { user } = useAuth();
+  
+  return (
+    <div style={styles.pageContent}>
+      <h1 style={styles.pageTitle}>👤 Il Tuo Profilo</h1>
+      
+      <div style={{
+        ...styles.card,
+        maxWidth: '500px',
+        margin: '0 auto'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px auto',
+            fontSize: '2rem'
+          }}>
+            👤
+          </div>
+          <h2>{user?.nome} {user?.cognome}</h2>
+          <p style={{ opacity: 0.8 }}>@{user?.username}</p>
+        </div>
+        
+        <div style={{ display: 'grid', gap: '15px', textAlign: 'left' }}>
+          <div style={{
+            padding: '15px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: theme.borderRadius.md
+          }}>
+            <strong>📧 Email:</strong> {user?.username}
+          </div>
+          
+          <div style={{
+            padding: '15px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: theme.borderRadius.md
+          }}>
+            <strong>📱 Telefono:</strong> {user?.telefono || 'Non specificato'}
+          </div>
+          
+          <div style={{
+            padding: '15px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: theme.borderRadius.md
+          }}>
+            <strong>🎂 Anno di Nascita:</strong> {user?.anno_nascita || 'Non specificato'}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Pagina per pubblicare annunci con componente moderno
+const CreateAnnouncementPage = () => {
+  return <CreateAnnouncementModern />;
+};
+
+// App principale con routing completo
+export default function UNIHomeApp() {
+  console.log("🏠 UNI Home - App Completa con Autenticazione FUNZIONANTE");
+  
+  return (
+    <AuthProvider>
+      <div style={styles.container}>
+        <Router>
+          <ModernNavbar />
+          <Routes>
+            <Route path="/" element={<Homepage />} />
+            <Route path="/auth" element={<UNIHomeAuthPage />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />            <Route path="/listings" element={<ListingsPage />} />
+            <Route path="/annuncio/:id" element={<AnnouncementDetailFixed />} /><Route path="/publish" element={
+              <ProtectedRoute>
+                <CreateAnnouncementPage />
+              </ProtectedRoute>
+            } />            <Route path="/messages" element={
+              <ProtectedRoute>
+                <MessagesPageEnhanced />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+        
+        {/* CSS per animazioni */}
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+          
+          * {
+            box-sizing: border-box;
+          }
+          
+          body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+          }
+          
+          input::placeholder,
+          textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+          }
+          
+          .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+          }        
+        `}</style>
+      </div>
+    </AuthProvider>
+  );
+}

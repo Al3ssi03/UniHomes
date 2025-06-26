@@ -580,7 +580,7 @@ const AnnouncementDetailFixed = () => {
                 {announcement.provincia && (
                   <p><strong>🏛️ Provincia:</strong> {announcement.provincia}</p>
                 )}
-                <p><strong>📅 Pubblicato:</strong> {formatDate(announcement.data_creazione)}</p>
+                <p><strong>📅 Pubblicato:</strong> {formatDate(announcement.createdAt)}</p>
                 {announcement.tipo_alloggio && (
                   <p><strong>🏡 Tipo:</strong> {announcement.tipo_alloggio}</p>
                 )}
@@ -821,7 +821,7 @@ const AnnouncementDetailFixed = () => {
                   )}
                   
                   <p style={{ opacity: 0.7, margin: '8px 0 0 0', fontSize: '14px' }}>
-                    📅 Pubblicato il {formatDate(announcement.data_creazione)}
+                    📅 Pubblicato il {formatDate(announcement.createdAt)}
                   </p>
                   
                   {/* Biografia */}

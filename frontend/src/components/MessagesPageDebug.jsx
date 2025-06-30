@@ -12,7 +12,18 @@ const MessagesPageDebug = () => {
 
   useEffect(() => {
     console.log('📨 [MessagesPageDebug] useEffect eseguito');
-    fetchConversations();
+    // Wrap fetchConversations in try-catch per sicurezza
+    const safeLoadConversations = async () => {
+      try {
+        await fetchConversations();
+      } catch (error) {
+        console.error('📨 [MessagesPageDebug] Errore critico in useEffect:', error);
+        setError(`Errore critico: ${error.message}`);
+        setLoading(false);
+      }
+    };
+    
+    safeLoadConversations();
   }, []);
 
   const fetchConversations = async () => {
@@ -22,7 +33,7 @@ const MessagesPageDebug = () => {
       
       const token = localStorage.getItem('authToken');
       console.log('📨 [MessagesPageDebug] Token:', token ? 'presente' : 'mancante');
-      setDebugInfo(prev => prev + `\nToken: ${token ? 'presente' : 'mancante'}`);
+      setDebugInfo(prev => (prev || '') + `\nToken: ${token ? 'presente' : 'mancante'}`);
       
       if (!token) {
         throw new Error('Token mancante - utente non autenticato');
@@ -35,31 +46,34 @@ const MessagesPageDebug = () => {
       });
 
       console.log('📨 [MessagesPageDebug] Response status:', response.status);
-      setDebugInfo(prev => prev + `\nResponse status: ${response.status}`);
+      setDebugInfo(prev => (prev || '') + `\nResponse status: ${response.status}`);
       
       if (response.ok) {
         const data = await response.json();
         console.log('📨 [MessagesPageDebug] Dati ricevuti:', data);
-        setDebugInfo(prev => prev + `\nConversazioni trovate: ${data.length}`);
-        setConversations(data);
+        
+        // Sicurezza: assicurati che data sia un array
+        const conversationsArray = Array.isArray(data) ? data : [];
+        setDebugInfo(prev => (prev || '') + `\nConversazioni trovate: ${conversationsArray.length}`);
+        setConversations(conversationsArray);
       } else {
         const errorText = await response.text();
         console.error('📨 [MessagesPageDebug] Errore API:', response.status, errorText);
-        setDebugInfo(prev => prev + `\nErrore API: ${response.status} - ${errorText}`);
+        setDebugInfo(prev => (prev || '') + `\nErrore API: ${response.status} - ${errorText}`);
         setError(`Errore API: ${response.status}`);
       }
     } catch (error) {
       console.error('📨 [MessagesPageDebug] Errore catch:', error);
-      setDebugInfo(prev => prev + `\nErrore: ${error.message}`);
+      setDebugInfo(prev => (prev || '') + `\nErrore: ${error.message}`);
       setError(error.message);
     } finally {
       console.log('📨 [MessagesPageDebug] Caricamento completato');
-      setDebugInfo(prev => prev + '\nCaricamento completato!');
+      setDebugInfo(prev => (prev || '') + '\nCaricamento completato!');
       setLoading(false);
     }
   };
 
-  console.log('📨 [MessagesPageDebug] Render - loading:', loading, 'error:', error, 'conversations:', conversations.length);
+  console.log('📨 [MessagesPageDebug] Render - loading:', loading, 'error:', error, 'conversations:', conversations?.length || 0);
 
   const styles = {
     container: {
@@ -143,7 +157,7 @@ const MessagesPageDebug = () => {
         
         <h1>💬 I Tuoi Messaggi</h1>
         
-        {conversations.length === 0 ? (
+        {conversations && conversations.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
             <h2>📭 Nessun Messaggio</h2>
             <p>Non hai ancora conversazioni. Inizia contattando i proprietari degli annunci!</p>
@@ -156,20 +170,39 @@ const MessagesPageDebug = () => {
           </div>
         ) : (
           <div>
-            <h3>Conversazioni ({conversations.length}):</h3>
-            {conversations.map((conv, index) => (
-              <div key={index} style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                padding: '15px',
-                borderRadius: '10px',
-                marginBottom: '10px'
-              }}>
-                <strong>{conv.partner?.nome} {conv.partner?.cognome}</strong>
-                <p style={{ margin: '5px 0 0 0', opacity: 0.8 }}>
-                  Ultimo messaggio: {new Date(conv.lastMessage?.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
+            <h3>Conversazioni ({conversations?.length || 0}):</h3>
+            {conversations && conversations.map((conv, index) => {
+              // Sicurezza: controlla che conv e le sue proprietà esistano
+              if (!conv) return null;
+              
+              const partner = conv.partner || {};
+              const lastMessage = conv.lastMessage || {};
+              
+              return (
+                <div key={conv.partnerId || index} style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  padding: '15px',
+                  borderRadius: '10px',
+                  marginBottom: '10px'
+                }}>
+                  <strong>
+                    {partner.nome || 'Nome non disponibile'} {partner.cognome || ''}
+                  </strong>
+                  <p style={{ margin: '5px 0 0 0', opacity: 0.8 }}>
+                    {lastMessage.createdAt ? (
+                      `Ultimo messaggio: ${new Date(lastMessage.createdAt).toLocaleDateString('it-IT')}`
+                    ) : (
+                      'Data non disponibile'
+                    )}
+                  </p>
+                  {lastMessage.contenuto && (
+                    <p style={{ margin: '5px 0 0 0', opacity: 0.6, fontSize: '0.9em' }}>
+                      "{lastMessage.contenuto.substring(0, 50)}..."
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
         

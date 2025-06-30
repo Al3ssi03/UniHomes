@@ -10,6 +10,7 @@ import AnnouncementDetailSimpleMap from './components/AnnouncementDetailSimpleMa
 import AnnouncementDetailFixed from './components/AnnouncementDetailFixed.jsx';
 import MessagesPageEnhanced from './components/MessagesPageEnhanced.jsx';
 import MessagesPageDebug from './components/MessagesPageDebug.jsx';
+import MessagesPageSafe from './components/MessagesPageSafe.jsx';
 import AnnouncementDetailSimple from './components/AnnouncementDetailSimple.jsx';
 
 // Context per gestire l'autenticazione
@@ -1151,7 +1152,7 @@ export default function UNIHomeApp() {
               </ProtectedRoute>
             } />            <Route path="/messages" element={
               <ProtectedRoute>
-                <MessagesPageDebug />
+                <MessagesPageSafe />
               </ProtectedRoute>
             } />
             <Route path="/profile" element={

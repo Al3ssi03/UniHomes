@@ -124,11 +124,25 @@ const AnnouncementDetailFixed = () => {
     setGeocodingStatus('loading');
     console.log(`🗺️ Tentativo geocoding per indirizzo: "${indirizzo}", città: "${città}", provincia: "${provincia}"`);
     
+    // Imposta l'indirizzo che verrà mostrato all'utente (il più completo possibile)
+    let displayAddress = '';
+    if (indirizzo && indirizzo.trim() && città && provincia) {
+      displayAddress = `${indirizzo.trim()}, ${città.trim()}, ${provincia.trim()}, Italia`;
+    } else if (indirizzo && indirizzo.trim() && città) {
+      displayAddress = `${indirizzo.trim()}, ${città.trim()}, Italia`;
+    } else if (città && provincia) {
+      displayAddress = `${città.trim()}, ${provincia.trim()}, Italia`;
+    } else if (città) {
+      displayAddress = `${città.trim()}, Italia`;
+    } else {
+      displayAddress = 'Indirizzo non specificato';
+    }
+    setLastSearchedAddress(displayAddress); // Mostra sempre l'indirizzo più completo
+    
     // Prova 1: Geocoding preciso con indirizzo completo inclusa provincia (PRIORITÀ MASSIMA)
     if (indirizzo && indirizzo.trim() && città && provincia) {
       try {
         const fullAddress = `${indirizzo.trim()}, ${città.trim()}, ${provincia.trim()}, Italia`;
-        setLastSearchedAddress(fullAddress); // Registra l'indirizzo ricercato
         console.log(`🌐 Tentativo geocoding ULTRA-PRECISO: "${fullAddress}"`);
         const coords = await tryGeocoding(fullAddress);
         if (coords) {
@@ -147,7 +161,6 @@ const AnnouncementDetailFixed = () => {
     if (indirizzo && indirizzo.trim() && città) {
       try {
         const fullAddress = `${indirizzo.trim()}, ${città.trim()}, Italia`;
-        setLastSearchedAddress(fullAddress); // Registra l'indirizzo ricercato
         console.log(`🌐 Tentativo geocoding PRECISO: "${fullAddress}"`);
         const coords = await tryGeocoding(fullAddress);
         if (coords) {
@@ -166,7 +179,6 @@ const AnnouncementDetailFixed = () => {
     if (città && provincia) {
       try {
         const cityAddress = `${città.trim()}, ${provincia.trim()}, Italia`;
-        setLastSearchedAddress(cityAddress); // Registra l'indirizzo ricercato
         console.log(`🌐 Tentativo geocoding città + provincia: "${cityAddress}"`);
         const coords = await tryGeocoding(cityAddress);
         if (coords) {
@@ -185,7 +197,6 @@ const AnnouncementDetailFixed = () => {
     if (città) {
       try {
         const cityAddress = `${città.trim()}, Italia`;
-        setLastSearchedAddress(cityAddress); // Registra l'indirizzo ricercato
         console.log(`🌐 Tentativo geocoding solo città: "${cityAddress}"`);
         const coords = await tryGeocoding(cityAddress);
         if (coords) {
@@ -204,7 +215,6 @@ const AnnouncementDetailFixed = () => {
     const cityKey = città ? città.toLowerCase().trim() : '';
     if (cityCoordinates[cityKey]) {
       const coords = cityCoordinates[cityKey];
-      setLastSearchedAddress(`${città} (coordinate predefinite)`); // Registra fallback
       setCoordinates(coords);
       calculateNearbyUniversities(coords);
       setGeocodingStatus('success');
@@ -215,7 +225,7 @@ const AnnouncementDetailFixed = () => {
 
     // Fallback finale: Coordinate di Roma
     console.warn('⚠️ Tutti i tentativi di geocoding falliti, uso coordinate Roma');
-    setLastSearchedAddress('Roma, Italia (fallback finale)'); // Registra fallback finale
+    setLastSearchedAddress('Roma, Italia (fallback finale)'); // Solo in caso di fallback totale
     const fallbackCoords = { lat: 41.9028, lng: 12.4964 };
     setCoordinates(fallbackCoords);
     calculateNearbyUniversities(fallbackCoords);
@@ -388,11 +398,21 @@ const AnnouncementDetailFixed = () => {
       }
 
       const userInfo = JSON.parse(userData);
+      const recipientId = announcement.userId || announcement.utente_id;
+      
+      // Verifica che l'utente non stia inviando un messaggio a se stesso
+      if (recipientId == userInfo.id) {
+        alert('❌ Non puoi inviare messaggi a te stesso');
+        setSendingMessage(false);
+        setShowMessageModal(false);
+        return;
+      }
       
       console.log('📤 Invio messaggio...', {
-        recipientId: announcement.userId || announcement.utente_id,
+        recipientId: recipientId,
         announcementId: announcement.id,
         senderName: userInfo.nome || userInfo.username || 'Utente',
+        currentUserId: userInfo.id,
         announcement: announcement // Debug: vediamo tutti i campi
       });
       
@@ -974,25 +994,40 @@ const AnnouncementDetailFixed = () => {
                 </div>
               </div>
               
-              <button 
-                onClick={() => setShowMessageModal(true)}
-                style={{
-                  background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '15px 30px',
-                  borderRadius: '12px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  width: '100%',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-              >
-                💬 Contatta Proprietario
-              </button>
+              {/* Nascondi il pulsante se l'utente sta guardando il proprio annuncio */}
+              {(() => {
+                const userData = localStorage.getItem('userData');
+                if (!userData) return true; // Mostra se non c'è userData
+                
+                try {
+                  const userInfo = JSON.parse(userData);
+                  const recipientId = announcement.userId || announcement.utente_id;
+                  return recipientId != userInfo.id; // Nascondi se è il proprio annuncio
+                } catch (error) {
+                  console.error('Errore parsing userData:', error);
+                  return true; // In caso di errore, mostra il pulsante
+                }
+              })() && (
+                <button 
+                  onClick={() => setShowMessageModal(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '15px 30px',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    width: '100%',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+                  onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+                >
+                  💬 Contatta Proprietario
+                </button>
+              )}
             </div>
           </div>
         </div>

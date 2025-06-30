@@ -9,6 +9,7 @@ import AnnouncementDetailWithMap from './components/AnnouncementDetailWithMap.js
 import AnnouncementDetailSimpleMap from './components/AnnouncementDetailSimpleMap.jsx';
 import AnnouncementDetailFixed from './components/AnnouncementDetailFixed.jsx';
 import MessagesPageEnhanced from './components/MessagesPageEnhanced.jsx';
+import MessagesPageDebug from './components/MessagesPageDebug.jsx';
 import AnnouncementDetailSimple from './components/AnnouncementDetailSimple.jsx';
 
 // Context per gestire l'autenticazione
@@ -583,6 +584,75 @@ const ListingsPage = () => {
                 background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4)'
               }}></div>
               
+              {/* Immagine principale */}
+              {listing.immagini && listing.immagini.length > 0 ? (
+                <div style={{
+                  width: '100%',
+                  height: '200px',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  marginBottom: '16px',
+                  position: 'relative'
+                }}>
+                  <img 
+                    src={`http://localhost:5000${listing.immagini[0]}`}
+                    alt={listing.titolo}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      transition: 'transform 0.3s ease'
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  <div style={{
+                    display: 'none',
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '48px',
+                    color: '#9ca3af'
+                  }}>
+                    🏠
+                  </div>
+                  {listing.immagini.length > 1 && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '8px',
+                      right: '8px',
+                      background: 'rgba(0, 0, 0, 0.7)',
+                      color: 'white',
+                      padding: '4px 8px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}>
+                      📷 +{listing.immagini.length - 1}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{
+                  width: '100%',
+                  height: '200px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '16px',
+                  fontSize: '48px',
+                  color: '#9ca3af'
+                }}>
+                  🏠
+                </div>
+              )}
+              
               <h3 style={{
                 fontSize: '20px',
                 fontWeight: 'bold',
@@ -1081,7 +1151,7 @@ export default function UNIHomeApp() {
               </ProtectedRoute>
             } />            <Route path="/messages" element={
               <ProtectedRoute>
-                <MessagesPageEnhanced />
+                <MessagesPageDebug />
               </ProtectedRoute>
             } />
             <Route path="/profile" element={

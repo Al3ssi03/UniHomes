@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const MessagesPage = () => {
+  console.log('📨 [MessagesPage] Componente inizializzato');
   const navigate = useNavigate();
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -147,20 +148,29 @@ const MessagesPage = () => {
 
   const fetchConversations = async () => {
     try {
+      console.log('📨 [MessagesPage] Inizio caricamento conversazioni...');
       const token = localStorage.getItem('authToken');
+      console.log('📨 [MessagesPage] Token:', token ? 'presente' : 'mancante');
+      
       const response = await fetch('http://localhost:5000/api/messages/conversations', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
+      console.log('📨 [MessagesPage] Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('📨 [MessagesPage] Conversazioni ricevute:', data);
         setConversations(data);
+      } else {
+        console.error('📨 [MessagesPage] Errore response:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Errore nel caricamento delle conversazioni:', error);
+      console.error('📨 [MessagesPage] Errore nel caricamento delle conversazioni:', error);
     } finally {
+      console.log('📨 [MessagesPage] Caricamento completato, impostando loading=false');
       setLoading(false);
     }
   };

@@ -89,6 +89,7 @@ const AnnouncementDetailFixed = () => {
       
       const data = await response.json();
       console.log('📍 Dati annuncio ricevuti:', data);
+      console.log('🔍 DEBUG recipientId - userId:', data.userId, 'utente_id:', data.utente_id);
       setAnnouncement(data);
       
       // Normalizza il campo città - supporta diverse varianti dal database
@@ -389,9 +390,10 @@ const AnnouncementDetailFixed = () => {
       const userInfo = JSON.parse(userData);
       
       console.log('📤 Invio messaggio...', {
-        recipientId: announcement.utente_id,
+        recipientId: announcement.userId || announcement.utente_id,
         announcementId: announcement.id,
-        senderName: userInfo.nome || userInfo.username || 'Utente'
+        senderName: userInfo.nome || userInfo.username || 'Utente',
+        announcement: announcement // Debug: vediamo tutti i campi
       });
       
       const response = await fetch('http://localhost:5000/api/messages', {
@@ -401,7 +403,7 @@ const AnnouncementDetailFixed = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          recipientId: announcement.utente_id,
+          recipientId: announcement.userId || announcement.utente_id,
           announcementId: announcement.id,
           content: message.trim(),
           senderName: userInfo.nome || userInfo.username || 'Utente'
@@ -550,6 +552,135 @@ const AnnouncementDetailFixed = () => {
           }}>
             {announcement.titolo}
           </h1>
+          
+          {/* Galleria Immagini */}
+          {announcement.immagini && announcement.immagini.length > 0 && (
+            <div style={{
+              marginBottom: '20px',
+              borderRadius: '15px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: announcement.immagini.length === 1 ? '1fr' : '2fr 1fr 1fr',
+                gap: '8px',
+                height: '300px'
+              }}>
+                {/* Immagine principale */}
+                <img 
+                  src={`http://localhost:5000${announcement.immagini[0]}`}
+                  alt={`${announcement.titolo} - Immagine 1`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'transform 0.3s ease'
+                  }}
+                  onClick={() => window.open(`http://localhost:5000${announcement.immagini[0]}`, '_blank')}
+                  onMouseOver={(e) => e.target.style.transform = 'scale(1.02)'}
+                  onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                  onError={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.display = 'none';
+                  }}
+                />
+                
+                {/* Immagini secondarie */}
+                {announcement.immagini.length > 1 && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateRows: announcement.immagini.length > 2 ? '1fr 1fr' : '1fr',
+                    gap: '8px'
+                  }}>
+                    {announcement.immagini.slice(1, 3).map((img, index) => (
+                      <img 
+                        key={index}
+                        src={`http://localhost:5000${img}`}
+                        alt={`${announcement.titolo} - Immagine ${index + 2}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          transition: 'transform 0.3s ease'
+                        }}
+                        onClick={() => window.open(`http://localhost:5000${img}`, '_blank')}
+                        onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                        onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+                
+                {/* Più immagini disponibili */}
+                {announcement.immagini.length > 3 && (
+                  <div style={{
+                    position: 'relative',
+                    overflow: 'hidden',
+                    borderRadius: '8px'
+                  }}>
+                    <img 
+                      src={`http://localhost:5000${announcement.immagini[3]}`}
+                      alt={`${announcement.titolo} - Immagine 4`}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => window.open(`http://localhost:5000${announcement.immagini[3]}`, '_blank')}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                    {announcement.immagini.length > 4 && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.7)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => {
+                        // Mostra tutte le immagini (potremmo implementare una lightbox)
+                        announcement.immagini.forEach((img, idx) => {
+                          setTimeout(() => {
+                            window.open(`http://localhost:5000${img}`, '_blank');
+                          }, idx * 200);
+                        });
+                      }}
+                      >
+                        +{announcement.immagini.length - 4} foto
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              <p style={{
+                fontSize: '12px',
+                opacity: 0.7,
+                marginTop: '8px',
+                textAlign: 'center'
+              }}>
+                💡 Clicca sulle immagini per ingrandirle
+              </p>
+            </div>
+          )}
           
           <div style={{
             background: 'linear-gradient(135deg, #10b981, #059669)',

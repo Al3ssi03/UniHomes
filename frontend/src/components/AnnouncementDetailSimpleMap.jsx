@@ -121,7 +121,7 @@ const AnnouncementDetailSimpleMap = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          recipientId: announcement.utente_id,
+          recipientId: announcement.userId || announcement.utente_id,
           announcementId: announcement.id,
           content: message,
           senderName: userData.nome || 'Utente'

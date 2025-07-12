@@ -20,6 +20,7 @@ const profileRoutes = require('./routes/profile');
 const messagesRoutes = require('./routes/messages');
 const citiesRoutes = require('./routes/cities');
 const geocodingRoutes = require('./routes/geocoding');
+const paymentsRoutes = require('./routes/payments');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -48,32 +49,20 @@ const upload = multer({
     if (mimetype && extname) {
       return cb(null, true);
     } else {
-      cb(new Error('Solo immagini sono consentite'));
+      cb(new Error('Solo file immagine sono permessi'));
     }
   }
 });
 
-// Crea cartella uploads se non esiste
-const fs = require('fs');
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
-}
-
-// Middleware
+// Middleware globali
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servire file statici (immagini upload)
+// Serve file statici (immagini)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Middleware per logging delle richieste (opzionale)
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
-  next();
-});
-
-// Middleware di logging per debug
+// Logging middleware
 app.use((req, res, next) => {
   console.log(`🌐 ${req.method} ${req.path}`);
   if (req.method === 'POST' && req.path.includes('/announcements')) {
@@ -83,148 +72,117 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
+// Debug middleware
+app.use((req, res, next) => {
+  if (req.method === 'POST' && req.path === '/api/announcements') {
+    console.log('📋 Body prima di multer:', req.body);
+    console.log('📋 Files prima di multer:', req.files);
+  }
+  next();
+});
+
+// Routes API
 app.use('/api/auth', authRoutes);
 app.use('/api/announcements', announcementsRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/geocoding', geocodingRoutes);
+app.use('/api/payments', paymentsRoutes);
 
-// Route di test
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Server FuoriSede/UniHomes funzionante!' });
-});
-
-// Route per recuperare info server
-app.get('/api/info', async (req, res) => {
-  try {
-    const User = require('./models/user');
-    const Announcement = require('./models/announcement');
-    const Message = require('./models/message');
-    
-    const usersCount = await User.count();
-    const announcementsCount = await Announcement.count();
-    const messagesCount = await Message.count();
-    
-    res.json({
-      appName: 'FuoriSede/UniHomes',
-      version: '1.0.0',
-      status: 'online',
-      database: 'connected',
-      stats: {
-        users: usersCount,
-        announcements: announcementsCount,
-        messages: messagesCount
-      },
-      endpoints: {
-        auth: '/api/auth',
-        announcements: '/api/announcements',
-        profile: '/api/profile',
-        messages: '/api/messages'
-      }
-    });
-  } catch (error) {    res.status(500).json({
-      appName: 'UNI Home',
-      status: 'error',
-      database: 'disconnected',
-      error: error.message
-    });
-  }
-});
-
-// Middleware per gestire 404
-app.use((req, res) => {
-  res.status(404).json({ 
-    message: 'Endpoint non trovato',
-    availableEndpoints: [
-      'GET /api/test',
-      'GET /api/info',
-      'POST /api/auth/register',
-      'POST /api/auth/login',
-      'GET /api/announcements',
-      'POST /api/announcements',
-      'GET /api/profile',
-      'GET /api/messages/conversations'
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    features: [
+      'Authentication',
+      'Announcements',
+      'Messages', 
+      'Profile Management',
+      'Cities',
+      'Geocoding',
+      'Payments'
     ]
   });
 });
 
-// Middleware per gestire errori
-app.use((error, req, res, next) => {
-  console.error('Errore server:', error);
+// Test endpoint per upload file
+app.post('/api/test-upload', upload.array('immagini', 5), (req, res) => {
+  console.log('📋 Test Upload - Body:', req.body);
+  console.log('📋 Test Upload - Files:', req.files);
   
-  if (error.name === 'ValidationError') {
-    return res.status(400).json({
-      message: 'Errore di validazione',
-      errors: error.errors
-    });
-  }
-  
-  if (error.name === 'MulterError') {
-    return res.status(400).json({
-      message: 'Errore upload file',
-      error: error.message
-    });
-  }
-  
-  res.status(500).json({
-    message: 'Errore interno del server',
-    ...(process.env.NODE_ENV === 'development' && { error: error.message })
+  res.json({
+    message: 'Test upload completato',
+    body: req.body,
+    files: req.files ? req.files.map(f => ({
+      filename: f.filename,
+      originalname: f.originalname,
+      size: f.size,
+      mimetype: f.mimetype
+    })) : []
   });
 });
 
-// Funzione per avviare il server
-async function startServer() {
-  try {    // Test connessione database
-    await sequelize.authenticate();
-    console.log('✅ Connessione database stabilita');
-    
-    // Sincronizza modelli (solo in sviluppo)
-    if (process.env.NODE_ENV !== 'production') {
-      // Use force: true to recreate tables cleanly and avoid constraint issues
-      await sequelize.sync({ force: true });
-      console.log('✅ Modelli database sincronizzati (ricreati)');
-      
-      // Create default test users after clean database
-      const User = require('./models/user');
-      const bcrypt = require('bcryptjs');
-      
-      try {
-        await User.create({
-          username: 'testuser',
-          email: 'test@example.com',
-          password_hash: await bcrypt.hash('password123', 10),
-          nome: 'Test',
-          cognome: 'User'
-        });
-        
-        await User.create({
-          username: 'mario.rossi',
-          email: 'mario@example.com',
-          password_hash: await bcrypt.hash('mario123', 10),
-          nome: 'Mario',
-          cognome: 'Rossi'
-        });
-        
-        console.log('✅ Utenti di test creati');
-      } catch (error) {
-        console.log('⚠️ Utenti di test già esistenti o errore nella creazione');
-      }
+// Gestione route non trovate
+app.use((req, res) => {
+  console.log(`❌ Route non trovata: ${req.method} ${req.path}`);
+  res.status(404).json({ 
+    message: 'Endpoint non trovato',
+    path: req.path,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Gestione errori globale
+app.use((error, req, res, next) => {
+  console.error('❌ Errore server:', error);
+  
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'File troppo grande. Massimo 5MB.' });
     }
-      // Avvia server
+    if (error.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({ message: 'Troppi file. Massimo 5 file.' });
+    }
+  }
+  
+  res.status(500).json({ 
+    message: 'Errore interno del server',
+    error: process.env.NODE_ENV === 'development' ? error.message : 'Errore interno'
+  });
+});
+
+// Avvio del server
+async function startServer() {
+  try {
+    // Test connessione database
+    await sequelize.authenticate();
+    console.log('✅ Connessione al database riuscita');
+    
+    // Sincronizza modelli (solo in development)
+    if (process.env.NODE_ENV !== 'production') {
+      await sequelize.sync({ alter: false });
+      console.log('✅ Modelli database sincronizzati');
+    }
+    
+    // Avvia server
     app.listen(PORT, () => {
-      console.log('\n🏠 UNI Home Server avviato con successo!');
-      console.log(`📡 Server in ascolto su porta ${PORT}`);
-      console.log(`🌐 Base URL: http://localhost:${PORT}`);
-      console.log(`📋 Info API: http://localhost:${PORT}/api/info`);
-      console.log(`🧪 Test endpoint: http://localhost:${PORT}/api/test`);
-      console.log('\n📚 Endpoints disponibili:');
-      console.log('   Auth: /api/auth/[register|login]');
-      console.log('   Annunci: /api/announcements');
-      console.log('   Profilo: /api/profile');
-      console.log('   Messaggi: /api/messages');
-      console.log('\n✨ UNI Home Server pronto per le richieste!');
+      console.log(`🚀 Server in ascolto sulla porta ${PORT}`);
+      console.log(`🌐 API Base URL: http://localhost:${PORT}/api`);
+      console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
+      
+      console.log('\n📋 Endpoints disponibili:');
+      console.log('  🔐 /api/auth - Autenticazione');
+      console.log('  🏠 /api/announcements - Annunci');
+      console.log('  👤 /api/profile - Profili utente');
+      console.log('  💬 /api/messages - Messaggi');
+      console.log('  🏛️ /api/cities - Città');
+      console.log('  🗺️ /api/geocoding - Geolocalizzazione');
+      console.log('  💳 /api/payments - Pagamenti');
+      console.log('  📁 /uploads - File statici');
     });
     
   } catch (error) {
@@ -234,23 +192,31 @@ async function startServer() {
 }
 
 // Gestione graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('\n🔄 Shutdown del server in corso...');
-  await sequelize.close();
-  console.log('✅ Connessioni database chiuse');
-  process.exit(0);
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Ricevuto SIGINT, chiusura server...');
+  try {
+    await sequelize.close();
+    console.log('✅ Connessione database chiusa');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Errore durante la chiusura:', error);
+    process.exit(1);
+  }
 });
 
-process.on('SIGINT', async () => {
-  console.log('\n🔄 Shutdown del server in corso...');
-  await sequelize.close();
-  console.log('✅ Connessioni database chiuse');
-  process.exit(0);
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 Ricevuto SIGTERM, chiusura server...');
+  try {
+    await sequelize.close();
+    console.log('✅ Connessione database chiusa');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Errore durante la chiusura:', error);
+    process.exit(1);
+  }
 });
 
 // Avvia il server
-if (require.main === module) {
-  startServer();
-}
+startServer();
 
 module.exports = app;

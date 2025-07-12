@@ -4,6 +4,12 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useLocat
 import UNIHomeAuthPage from './pages/UNIHomeAuthPage-Fixed.jsx';
 import CreateAnnouncementFixed from './components/CreateAnnouncementFixed.jsx';
 import CreateAnnouncementModern from './components/CreateAnnouncementModern.jsx';
+import AnnouncementDetailPremium from './components/AnnouncementDetailPremium.jsx';
+import MessagesPageComplete from './components/MessagesPageComplete.jsx';
+import PaymentPage from './components/PaymentPage.jsx';
+import PaymentTestPage from './pages/PaymentTestPage.jsx';
+import AdminPaymentsPage from './pages/AdminPaymentsPage.jsx';
+// Backup components
 import AnnouncementDetailEnhanced from './components/AnnouncementDetailEnhanced.jsx';
 import AnnouncementDetailWithMap from './components/AnnouncementDetailWithMap.jsx';
 import AnnouncementDetailSimpleMap from './components/AnnouncementDetailSimpleMap.jsx';
@@ -351,6 +357,20 @@ const ModernNavbar = () => {
             >
               💬 Messaggi
             </button>
+            <button
+              style={location.pathname === '/payment' ? styles.button : styles.buttonOutline}
+              onClick={() => handleNavigation('/payment')}
+            >
+              💳 Pagamenti
+            </button>
+            {user?.username === 'admin' && (
+              <button
+                style={location.pathname === '/admin/payments' ? styles.button : styles.buttonOutline}
+                onClick={() => handleNavigation('/admin/payments')}
+              >
+                🏦 Admin
+              </button>
+            )}
             <button
               style={location.pathname === '/profile' ? styles.button : styles.buttonOutline}
               onClick={() => handleNavigation('/profile')}
@@ -1146,13 +1166,24 @@ export default function UNIHomeApp() {
                 <Dashboard />
               </ProtectedRoute>
             } />            <Route path="/listings" element={<ListingsPage />} />
-            <Route path="/annuncio/:id" element={<AnnouncementDetailFixed />} /><Route path="/publish" element={
+            <Route path="/annuncio/:id" element={<AnnouncementDetailPremium />} /><Route path="/publish" element={
               <ProtectedRoute>
                 <CreateAnnouncementPage />
               </ProtectedRoute>
             } />            <Route path="/messages" element={
               <ProtectedRoute>
-                <MessagesPageSafe />
+                <MessagesPageComplete />
+              </ProtectedRoute>
+            } />
+            <Route path="/payment" element={
+              <ProtectedRoute>
+                <PaymentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/payment-test" element={<PaymentTestPage />} />
+            <Route path="/admin/payments" element={
+              <ProtectedRoute>
+                <AdminPaymentsPage />
               </ProtectedRoute>
             } />
             <Route path="/profile" element={

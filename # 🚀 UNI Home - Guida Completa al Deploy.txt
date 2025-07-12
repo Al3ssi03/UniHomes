@@ -1,0 +1,503 @@
+# 🚀 UNI Home - Guida Completa al Deploy in Produzione
+
+## 📋 Panoramica del Deploy
+
+Questa guida ti porterà dal codice locale al sito live in produzione con dominio personalizzato e database cloud.
+
+### 🎯 Stack di Produzione Consigliato
+```
+🌐 DOMINIO: unihomes.it (Namecheap ~€10/anno)
+💾 DATABASE: Supabase PostgreSQL (FREE/PRO €25/mese)
+🎨 FRONTEND: Vercel (GRATIS)
+⚙️ BACKEND: Railway (~€5/mese)
+📧 EMAIL: Resend (3000 email/mese gratis)
+💳 PAGAMENTI: Stripe (commissioni solo su transazioni)
+```
+
+**💰 Costo totale: €15-30/mese**
+
+---
+
+## 🛒 Step 1: Acquisto Dominio
+
+### Domini Consigliati (in ordine di preferenza):
+```
+1. unihomes.it - IDEALE per il brand
+2. unihome.it
+3. casestudenti.it
+4. studenthomes.it
+5. abitareuni.it
+6. homesuni.it
+```
+
+### Dove Acquistare:
+1. **[Namecheap.com](https://namecheap.com)** (Raccomandato - €8-12/anno)
+2. **[Cloudflare](https://www.cloudflare.com/products/registrar/)** (€8/anno + CDN)
+3. **[Aruba.it](https://www.aruba.it)** (Provider italiano - €12-15/anno)
+
+### Processo di Acquisto:
+```bash
+1. Vai su namecheap.com
+2. Cerca il dominio desiderato
+3. Aggiungi al carrello
+4. Completa l'acquisto
+5. Accedi al dashboard DNS
+```
+
+---
+
+## 💾 Step 2: Setup Database Cloud
+
+### Opzione A: Supabase (Raccomandato)
+
+#### Registrazione:
+1. Vai su [supabase.com](https://supabase.com)
+2. Registrati con GitHub
+3. Crea nuovo progetto: "UNI-Home-Prod"
+4. Scegli regione: "Europe West (Ireland)"
+5. Genera password sicura
+
+#### Configurazione Database:
+```sql
+-- Copia e incolla nel SQL Editor di Supabase:
+
+-- Tabella Users
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(255) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(50) DEFAULT 'user',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabella Announcements
+CREATE TABLE announcements (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  price DECIMAL(10,2) NOT NULL,
+  address TEXT NOT NULL,
+  city VARCHAR(100) NOT NULL,
+  province VARCHAR(100) NOT NULL,
+  latitude DECIMAL(10,8),
+  longitude DECIMAL(11,8),
+  user_id INTEGER REFERENCES users(id),
+  images TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabella Messages
+CREATE TABLE messages (
+  id SERIAL PRIMARY KEY,
+  sender_id INTEGER REFERENCES users(id),
+  receiver_id INTEGER REFERENCES users(id),
+  announcement_id INTEGER REFERENCES announcements(id),
+  message TEXT NOT NULL,
+  read_status BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabella Payments
+CREATE TABLE payments (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  announcement_id INTEGER REFERENCES announcements(id),
+  stripe_payment_intent_id VARCHAR(255),
+  amount DECIMAL(10,2) NOT NULL,
+  admin_fee DECIMAL(10,2) NOT NULL,
+  total_amount DECIMAL(10,2) NOT NULL,
+  status VARCHAR(50) DEFAULT 'pending',
+  payment_method VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indici per performance
+CREATE INDEX idx_announcements_city ON announcements(city);
+CREATE INDEX idx_announcements_user ON announcements(user_id);
+CREATE INDEX idx_messages_users ON messages(sender_id, receiver_id);
+CREATE INDEX idx_payments_user ON payments(user_id);
+```
+
+#### Ottieni URL Database:
+```bash
+1. Vai in "Settings" > "Database"
+2. Copia "Connection string"
+3. Sostituisci [YOUR-PASSWORD] con la tua password
+4. Salva l'URL per dopo
+```
+
+### Opzione B: Railway Database
+```bash
+1. Vai su railway.app
+2. New Project > Database > PostgreSQL
+3. Copia DATABASE_URL dalle variabili
+4. Esegui le stesse query SQL sopra
+```
+
+---
+
+## ⚙️ Step 3: Deploy Backend su Railway
+
+### Preparazione Codice:
+```bash
+# 1. Aggiorna package.json del server
+cd server
+```
+
+Modifica [`server/package.json`](server/package.json):
+```json
+{
+  "name": "unihome-backend",
+  "version": "1.0.0",
+  "description": "UNI Home Backend API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
+```
+
+### Deploy su Railway:
+
+#### 1. Registrazione:
+```bash
+1. Vai su railway.app
+2. Accedi con GitHub
+3. Autorizza l'accesso al repository
+```
+
+#### 2. Deploy:
+```bash
+1. "New Project" > "Deploy from GitHub repo"
+2. Seleziona il tuo repository UniHomes
+3. "Configure" > "Root Directory" > "server"
+4. Railway rileverà automaticamente Node.js
+```
+
+#### 3. Variabili Ambiente:
+Nel dashboard Railway, aggiungi queste variabili:
+```env
+NODE_ENV=production
+PORT=5000
+DATABASE_URL=postgresql://[DA-SUPABASE]
+JWT_SECRET=tuo_jwt_secret_super_sicuro_qui
+STRIPE_SECRET_KEY=sk_live_[TUA-CHIAVE-STRIPE]
+FRONTEND_URL=https://unihomes.it
+ADMIN_EMAIL=tuo@email.com
+```
+
+#### 4. Deploy:
+```bash
+1. Commit e push le modifiche
+2. Railway farà deploy automaticamente
+3. Salva l'URL pubblico (es: unihome-backend-production.up.railway.app)
+```
+
+---
+
+## 🎨 Step 4: Deploy Frontend su Vercel
+
+### Preparazione Codice:
+
+#### 1. Aggiorna configurazione frontend:
+```bash
+cd frontend
+```
+
+Crea [`frontend/.env.production`](frontend/.env.production):
+```env
+VITE_API_URL=https://tuo-backend.railway.app/api
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_[TUA-CHIAVE-STRIPE]
+```
+
+#### 2. Aggiorna fetch URLs nel codice:
+Sostituisci tutti i `http://localhost:5000` con:
+```javascript
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// Esempio:
+fetch(`${API_BASE_URL}/announcements`, {
+  // ...
+})
+```
+
+#### 3. Build di test:
+```bash
+npm run build
+# Controlla che non ci siano errori
+```
+
+### Deploy su Vercel:
+
+#### 1. Registrazione:
+```bash
+1. Vai su vercel.com
+2. Accedi con GitHub
+3. Autorizza l'accesso al repository
+```
+
+#### 2. Deploy:
+```bash
+1. "New Project"
+2. Seleziona repository UniHomes
+3. Framework Preset: "Vite"
+4. Root Directory: "frontend"
+5. Build Command: "npm run build"
+6. Output Directory: "dist"
+```
+
+#### 3. Variabili Ambiente:
+```env
+VITE_API_URL=https://tuo-backend.railway.app/api
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_[TUA-CHIAVE]
+```
+
+#### 4. Deploy:
+```bash
+1. "Deploy"
+2. Attendi 2-3 minuti
+3. Salva l'URL temporaneo (es: unihomes.vercel.app)
+```
+
+---
+
+## 🌐 Step 5: Configurazione Dominio Personalizzato
+
+### Su Vercel:
+```bash
+1. Dashboard Vercel > Tuo progetto
+2. "Settings" > "Domains"
+3. Aggiungi "unihomes.it"
+4. Copia i record DNS mostrati
+```
+
+### Su Namecheap:
+```bash
+1. Dashboard Namecheap > "Manage" del tuo dominio
+2. "Advanced DNS"
+3. Aggiungi i record forniti da Vercel:
+   - Type: CNAME, Host: www, Value: cname.vercel-dns.com
+   - Type: A, Host: @, Value: 76.76.19.61
+4. Salva modifiche
+```
+
+### Verifica:
+```bash
+# Attendi 10-30 minuti per propagazione DNS
+# Poi testa:
+https://unihomes.it
+```
+
+---
+
+## 🔧 Step 6: Configurazioni Finali
+
+### 1. CORS Backend:
+In [`server/index.js`](server/index.js):
+```javascript
+app.use(cors({
+  origin: [
+    'https://unihomes.it',
+    'https://www.unihomes.it',
+    'http://localhost:5173' // Per development
+  ],
+  credentials: true
+}));
+```
+
+### 2. SSL e Sicurezza:
+```javascript
+// In server/index.js
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+```
+
+### 3. Stripe Keys di Produzione:
+```bash
+1. Dashboard Stripe > "Developers" > "API keys"
+2. Copia "Publishable key" e "Secret key" (live mode)
+3. Aggiorna variabili su Railway e Vercel
+```
+
+---
+
+## 🧪 Step 7: Testing in Produzione
+
+### Checklist Pre-Launch:
+```bash
+✅ Dominio risolve correttamente
+✅ HTTPS funziona (SSL)
+✅ API backend risponde
+✅ Database connesso
+✅ Autenticazione funziona
+✅ Upload immagini funziona
+✅ Geolocalizzazione funziona
+✅ Messaggistica funziona
+✅ Pagamenti Stripe funzionano
+✅ Email di conferma inviate
+✅ Admin dashboard accessibile
+```
+
+### Test Utente Completo:
+```bash
+1. Registrazione nuovo utente
+2. Login
+3. Creazione annuncio con immagini
+4. Ricerca geolocalizzata
+5. Invio messaggio da annuncio
+6. Pagamento caparra
+7. Ricezione email conferma
+```
+
+---
+
+## 📊 Step 8: Monitoring e Manutenzione
+
+### Analytics:
+```bash
+1. Google Analytics 4
+2. Vercel Analytics (incluso)
+3. Railway Metrics
+4. Supabase Dashboard
+```
+
+### Backup Database:
+```bash
+# Setup backup automatici Supabase
+1. Dashboard Supabase > "Settings" > "Database"
+2. "Point in Time Recovery" (Pro plan)
+3. Backup giornalieri automatici
+```
+
+### Monitoring Uptime:
+```bash
+1. UptimeRobot (gratis)
+2. Monitor: https://unihomes.it
+3. Alert via email se down
+```
+
+---
+
+## 🚨 Troubleshooting Comuni
+
+### Errore CORS:
+```bash
+# Sintomo: "CORS error" nel browser
+# Soluzione: Verifica URL in cors() config backend
+```
+
+### Database Connection Error:
+```bash
+# Sintomo: "Connection refused" 
+# Soluzione: Verifica DATABASE_URL su Railway
+```
+
+### Build Error Frontend:
+```bash
+# Sintomo: Deploy fallisce su Vercel
+# Soluzione: npm run build localmente per debug
+```
+
+### 404 su Route Frontend:
+```bash
+# Sintomo: Refresh su /messages da errore
+# Soluzione: Aggiungi vercel.json per SPA routing
+```
+
+Crea [`frontend/vercel.json`](frontend/vercel.json):
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
+}
+```
+
+---
+
+## 📈 Ottimizzazioni Post-Launch
+
+### Performance:
+```bash
+1. Abilita Vercel Edge Cache
+2. Ottimizza immagini (next/image o cdn)
+3. Lazy loading componenti React
+4. Database indexing avanzato
+```
+
+### SEO:
+```bash
+1. Meta tags dinamici
+2. Sitemap.xml
+3. Google Search Console
+4. Schema.org markup
+```
+
+### Scaling:
+```bash
+# Quando hai 1000+ utenti:
+1. Upgrade Supabase a Pro
+2. CDN per immagini (Cloudinary)
+3. Redis per caching
+4. Load balancer per backend
+```
+
+---
+
+## 💰 Costi Riassuntivi
+
+### Setup Iniziale:
+```
+🌐 Dominio: €10/anno
+⚙️ Totale primo anno: €10
+```
+
+### Costi Mensili:
+```
+💾 Database Supabase: €0 (Free tier)
+⚙️ Railway Backend: €5/mese
+🎨 Vercel Frontend: €0 (Free tier)
+📧 Email Resend: €0 (3000 email/mese)
+💳 Stripe: 1.4% + €0.25 per transazione
+
+💰 Totale: ~€5/mese iniziale
+💰 Con traffico medio: ~€15-25/mese
+```
+
+---
+
+## 🎉 Congratulazioni!
+
+Una volta completati tutti questi step, avrai:
+- ✅ Sito live su dominio personalizzato
+- ✅ Database cloud sicuro e scalabile  
+- ✅ Backend API robusto
+- ✅ Pagamenti sicuri con Stripe
+- ✅ Sistema pronto per migliaia di utenti
+
+**Il tuo UNI Home è ora LIVE! 🚀**
+
+---
+
+## 📞 Supporto
+
+Per problemi durante il deploy:
+1. Controlla i log su Railway/Vercel
+2. Testa le API con Postman
+3. Verifica variabili ambiente
+4. Controlla la console browser per errori frontend
+
+**Tempo stimato deploy completo: 3-4 ore**
+
+---
+
+*Ultima revisione: Gennaio 2025*
